@@ -1,0 +1,18 @@
+basic operations
+
+* create group of cards
+    - private group: "owner" sees one side of the cards, others see the other side
+    - group types:
+        * stack
+        * normal (side-by-side)
+        * overlapped
+* flipping card(s)
+* add card(s) to group
+* move group position
+* move card(s) to another group
+* move card(s) inside group
+* shuffle group
+
+* deck is a predefined (hidden)stack
+* game starts with all the cards available
+* player can join game in progress

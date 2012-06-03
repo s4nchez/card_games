@@ -1,0 +1,116 @@
+<html>
+<script type="text/javascript" src="http://ocanvas.org/source/ocanvas-2.1.1.min.js"></script>
+<script type="text/javascript">
+
+    var createGame = function () {
+        var result = {}, cards = [], backCard = "b1fv", history = [];
+        for (var i = 1; i <= 52; i++) {
+            cards.push("" + i);
+        }
+
+        result.handleAction = function (action) {
+            var id = history.length;
+            history.push(action);
+            return id;
+        };
+
+        result.actionFor = function (id, player) {
+            var action = history[id];
+            return {
+                card:player === action.owner ? action.card : "b1fv"
+            };
+        };
+
+        result.historyFor = function (player) {
+            var historyForPlayer = [];
+            for (var i = 0; i < history.length; i++) {
+                historyForPlayer.push(result.actionFor(i, player));
+            }
+            return historyForPlayer;
+        };
+
+        history.push({
+            action:"add_card",
+            card:"1",
+            owner:"p1"
+        });
+
+        return result;
+    };
+
+    var createTransport = function () {
+        var result = {},
+                game = createGame(),
+                listeners = {};
+        result.send = function (action) {
+            var id = game.handleAction(action);
+            for (var player in listeners) {
+                listeners[player].callback(game.actionFor(id, player));
+            }
+        };
+        result.bind = function (player, callback) {
+            listeners[player] = {
+                player:player,
+                callback:callback
+            };
+        };
+        result.readyToPlay = function (player) {
+            var actions = game.historyFor(player);
+            for (var i = 0; i < actions.length; i++) {
+                listeners[player].callback(actions[i]);
+            }
+        };
+
+        return result;
+    };
+
+    var createGameStage = function (canvasId, transport) {
+        var canvas = oCanvas.create({
+            canvas:"#" + canvasId
+        });
+        canvas.bind("click tap", function () {
+//            transport.send("click");
+        });
+        transport.bind(canvasId, function (action) {
+//            alert('received ' + action );
+            var image = canvas.display.image({
+                x:10,
+                y:10,
+                origin:{ x:"top", y:"left" },
+                image:"classic-cards/" + action.card + ".png"
+            });
+            canvas.addChild(image);
+        });
+
+        transport.readyToPlay(canvasId);
+    };
+
+    function init() {
+        var transport = createTransport();
+        createGameStage("p1", transport);
+        createGameStage("p2", transport);
+        document.getElementById("add_card_p1").onclick = function () {
+            transport.send({
+                action:"add_card",
+                card:"1",
+                owner:"p1"
+            });
+        };
+    }
+
+</script>
+<body onload="init();">
+<table>
+    <tr>
+        <td>
+            <canvas class="game" id="p1" width="400" height="500"></canvas>
+            <br/>
+            <input type="button" id="add_card_p1" value="add card"/></td>
+        <td style="background-color: black"></td>
+        <td>
+            <canvas class="game" id="p2" width="400" height="500"></canvas>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
