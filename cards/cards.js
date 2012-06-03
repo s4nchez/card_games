@@ -22,7 +22,7 @@ var createGame = function () {
         var action = history[id];
         return {
             action: action.action,
-            element_id: action.element_id && elementIdFor(action.card_id),
+            element_id: action.element_id || elementIdFor(action.card_id),
             card_id: action.details && action.details.owner && player === action.details.owner ? action.card_id : "b1fv",
             details: action.details
         };
@@ -40,7 +40,7 @@ var createGame = function () {
 
     history.push({
         action:"initial_stack",
-        element_id:0,
+        element_id: "set_0",
         stack:"0"
     });
 
@@ -51,6 +51,7 @@ var createTransport = function () {
     var result = {},
         game = createGame(),
         listeners = {};
+
     result.send = function (action) {
         var id = game.handleAction(action);
         for (var player in listeners) {
@@ -109,7 +110,7 @@ var createGameStage = function (canvasId, transport) {
         return result;
     };
 
-    createSet = function(action){
+    createSet = function(elementId){
         var result = {},
             cards = [],
             setImage = canvas.display.rectangle({
@@ -134,7 +135,7 @@ var createGameStage = function (canvasId, transport) {
             end: function(){
                 transport.send({
                     action: "change_position",
-                    element_id: action.element_id,
+                    element_id: elementId,
                     details: {
                         x: setImage.abs_x,
                         y: setImage.abs_y
@@ -158,7 +159,7 @@ var createGameStage = function (canvasId, transport) {
             elements[action.element_id] = createCard(action);
         },
         "initial_stack": function(action){
-            elements[action.element_id] = createSet(action)
+            elements[action.element_id] = createSet(action.element_id);
         },
         "change_position": function(action){
             var element = elements[action.element_id];
@@ -166,6 +167,9 @@ var createGameStage = function (canvasId, transport) {
                 return;
             }
             element.moveTo(action.details.x, action.details.y);
+        },
+        "move_card": function(action) {
+            elements[action.details.destination_element_id] = createSet(action.details.destination_element_id);
         }
     };
 
@@ -182,10 +186,12 @@ function init() {
     createGameStage("p2", transport);
     document.getElementById("add_card_p1").onclick = function () {
         transport.send({
-            action:"add_card",
-            card_id:"1",
-            details:{
-                owner:"p1"
+//            element_id: 6,
+//            action: "add_card"
+            element_id: "set_0",
+            action:"move_card",
+            details: {
+                destination_element_id: "set_1"
             }
         });
     };
