@@ -12,9 +12,30 @@ var createGame = function () {
         return elements[cardId];
     };
 
+    var findSet = function(setId){
+        return setId && cardSets[setId.split("_")[1]];
+    };
+
+    var actionHandlers = {
+        "move_card": function(action){
+            var sourceCardSet = findSet(action.element_id);
+            if(sourceCardSet){
+                var cardToMove = sourceCardSet.pop();
+                var destinationCardSet = findSet(action.details.destination_element_id);
+                if(!destinationCardSet){
+                    destinationCardSet = [cardToMove];
+                    action.details.destination_element_id = "set_"+cardSets.length;
+                    cardSets.push(destinationCardSet);
+                }
+            }
+            return action;
+        }
+    };
+
     result.handleAction = function (action) {
-        var id = history.length;
-        history.push(action);
+        var id = history.length,
+            handledAction = (actionHandlers[action.action] && actionHandlers[action.action](action)) || action;
+        history.push(handledAction);
         return id;
     };
 
@@ -191,7 +212,6 @@ function init() {
             element_id: "set_0",
             action:"move_card",
             details: {
-                destination_element_id: "set_1"
             }
         });
     };
