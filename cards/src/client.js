@@ -28,51 +28,75 @@ GAME.createCard = function(canvas, transport, elementId, card, x, y){
     return result;
 };
 
-GAME.createSet = function(canvas, transport, elementId, cards, x, y){
-        var result = {},
-            cardComponents = [],
-            setImage = canvas.display.rectangle({
-                x: x,
-                y: y,
-                width: 87,
-                height: 111,
-                stroke: "outside 1px rgba(0, 0, 0, 0.5)"
+GAME.createSet = function(canvas, transport, elementId, setType, cards, x, y){
+    var drawingStrategies = {},
+        createBorder = function () {
+        var border = {},
+            borderImage = canvas.display.rectangle({
+                x:x,
+                y:y,
+                width:87,
+                height:111,
+                stroke:"outside 1px rgba(0, 0, 0, 0.5)"
             });
-        canvas.addChild(setImage);
-        for(var i =0; i < 5; i++){
-            var image = canvas.display.image({
-                x:x+5+i,
-                y:x+5+i,
-                origin:{ x:"top", y:"left" },
-                image:"classic-cards/b1fv.png"
-            });
-            canvas.addChild(image);
-            cardComponents.push(image)
-        }
-//        cardComponents.push(
-//          GAME.createCard(canvas, transport, cards[0], cards[0], x+10, y+10)
-//        );
-        setImage.dragAndDrop({
-            end: function(){
+        canvas.addChild(borderImage);
+        borderImage.dragAndDrop({
+            end:function () {
                 transport.send({
-                    action: "change_position",
-                    element_id: elementId,
-                    details: {
-                        x: setImage.abs_x,
-                        y: setImage.abs_y
+                    action:"change_position",
+                    element_id:elementId,
+                    details:{
+                        x:borderImage.abs_x,
+                        y:borderImage.abs_y
                     }
                 })
             }
         });
-        result.moveTo = function(x,y){
-            setImage.moveTo(x,y);
-            for(var i =0; i < cardComponents.length;i++){
-                cardComponents[i].moveTo(x+5+i, y+5+i);
-            }
+        border.moveTo = function (x, y) {
+            borderImage.moveTo(x, y);
+        };
+        return border;
+    };
+
+    drawingStrategies["stack"] = function () {
+        var stack = {}, border = createBorder(), pile, topCard,
+            createPile = function () {
+                var pile = {}, cardComponents = [];
+                for (var i = 0; i < 5; i++) {
+                    var image = canvas.display.image({
+                        x:x + 5 + i,
+                        y:y + 5 + i,
+                        origin:{ x:"top", y:"left" },
+                        image:"classic-cards/b1fv.png"
+                    });
+                    canvas.addChild(image);
+                    cardComponents.push(image)
+                }
+                pile.moveTo = function (x, y) {
+                    for (var i = 0; i < cardComponents.length; i++) {
+                        cardComponents[i].moveTo(x + 5 + i, y + 5 + i);
+                    }
+                };
+                return pile;
+            };
+        pile = createPile();
+        topCard = GAME.createCard(canvas, transport, elementId, cards[0], x+10, y+10);
+        stack.moveTo = function (x, y) {
+            border.moveTo(x, y);
+            pile.moveTo(x,y);
+            topCard.moveTo(x+10,y+10);
             canvas.redraw();
         };
-        return result;
+        return stack;
+    };
+
+    drawingStrategies["single"] = function(){
+        return GAME.createCard(canvas, transport, elementId, cards[0], x+10, y+10);
+    };
+
+    return drawingStrategies[setType]();
 };
+
 
 GAME.createGameStage = function (canvasId, transport) {
     var elements = {},
@@ -85,7 +109,7 @@ GAME.createGameStage = function (canvasId, transport) {
             elements[action.element_id] = GAME.createCard(canvas, transport, action.element_id, action.card_id, 10, 10);
         },
         "initial_stack": function(action){
-            elements[action.element_id] = GAME.createSet(canvas, transport, action.element_id, [action.card_id], 10, 10);
+            elements[action.element_id] = GAME.createSet(canvas, transport, action.element_id, "stack", [action.card_id], 10, 10);
         },
         "change_position": function(action){
             var element = elements[action.element_id];
@@ -95,7 +119,7 @@ GAME.createGameStage = function (canvasId, transport) {
             element.moveTo(action.details.x, action.details.y);
         },
         "move_card": function(action) {
-            elements[action.details.destination_element_id] = createSet(action.details.destination_element_id);
+            elements[action.details.destination_element_id] = GAME.createSet(canvas, transport, action.details.destination_element_id, "single", [action.card_id], 100, 10);
         }
     };
 
