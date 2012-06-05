@@ -1,3 +1,14 @@
+Array.prototype.shuffle = function (){
+    var i = this.length, j, temp;
+    if ( i == 0 ) return;
+    while ( --i ) {
+        j = Math.floor( Math.random() * ( i + 1 ) );
+        temp = this[i];
+        this[i] = this[j];
+        this[j] = temp;
+    }
+};
+
 var createGame = function () {
     var result = {}, cards = [], backCard = "b1fv", history = [], elements = {}, cardSets = [];
     for (var i = 1; i <= 52; i++) {
@@ -22,7 +33,9 @@ var createGame = function () {
                 var destinationCardSet = findSet(action.details.destination_element_id);
                 if(!destinationCardSet){
                     destinationCardSet = [cardToMove];
+                    action.card_id = cardToMove;
                     action.details.destination_element_id = "set_"+cardSets.length;
+                    action.details.updated_card_id = sourceCardSet[sourceCardSet.length-1]
                     cardSets.push(destinationCardSet);
                 }
             }
@@ -55,11 +68,17 @@ var createGame = function () {
         return historyForPlayer;
     };
 
+    cards.shuffle();
+
     cardSets.push(cards);
 
     history.push({
         action:"initial_stack",
         element_id: "set_0",
+        card_id: cards[cards.length-1],
+        details: {
+            owner: "p1"
+        },
         stack:"0"
     });
 

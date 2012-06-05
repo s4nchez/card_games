@@ -7,7 +7,7 @@ var createTransport = function (server) {
         var id = game.handleAction(action);
         for (var player in listeners) {
             var actionFor = game.actionFor(id, player);
-            console.log("Dispatching "+JSON.stringify(actionFor));
+            console.log("Dispatching to " + player + ": " + JSON.stringify(actionFor));
             listeners[player].callback(actionFor);
         }
     };
@@ -20,6 +20,7 @@ var createTransport = function (server) {
     result.readyToPlay = function (player) {
         var actions = game.historyFor(player);
         for (var i = 0; i < actions.length; i++) {
+            console.log("Dispatching to " + player + ": " + JSON.stringify(actions[i]));
             listeners[player].callback(actions[i]);
         }
     };

@@ -25,16 +25,19 @@ GAME.createCard = function(canvas, transport, elementId, card, x, y){
         image.moveTo(x, y);
         canvas.redraw();
     };
+    result.destroy = function(){
+        canvas.removeChild(image);
+    };
     return result;
 };
 
-GAME.createSet = function(canvas, transport, elementId, setType, cards, x, y){
+GAME.createSet = function(canvas, transport, elementId, setType, cards, initialX, initialY){
     var drawingStrategies = {},
         createBorder = function () {
         var border = {},
             borderImage = canvas.display.rectangle({
-                x:x,
-                y:y,
+                x:initialX,
+                y:initialY,
                 width:87,
                 height:111,
                 stroke:"outside 1px rgba(0, 0, 0, 0.5)"
@@ -59,7 +62,7 @@ GAME.createSet = function(canvas, transport, elementId, setType, cards, x, y){
     };
 
     drawingStrategies["stack"] = function () {
-        var stack = {}, border = createBorder(), pile, topCard,
+        var stack = {}, border = createBorder(), pile, topCard, x = initialX, y = initialY,
             createPile = function () {
                 var pile = {}, cardComponents = [];
                 for (var i = 0; i < 5; i++) {
@@ -81,17 +84,23 @@ GAME.createSet = function(canvas, transport, elementId, setType, cards, x, y){
             };
         pile = createPile();
         topCard = GAME.createCard(canvas, transport, elementId, cards[0], x+10, y+10);
-        stack.moveTo = function (x, y) {
-            border.moveTo(x, y);
-            pile.moveTo(x,y);
-            topCard.moveTo(x+10,y+10);
+        stack.moveTo = function (newX, newY) {
+            x = newX;
+            y = newY;
+            border.moveTo(newX, newY);
+            pile.moveTo(newX,newY);
+            topCard.moveTo(newX+10,newY+10);
             canvas.redraw();
+        };
+        stack.updateTopCard = function(cardId){
+          topCard.destroy();
+          topCard = GAME.createCard(canvas, transport, elementId, cardId, x+10, y+10);
         };
         return stack;
     };
 
     drawingStrategies["single"] = function(){
-        return GAME.createCard(canvas, transport, elementId, cards[0], x+10, y+10);
+        return GAME.createCard(canvas, transport, elementId, cards[0], initialX+10, initialY+10);
     };
 
     return drawingStrategies[setType]();
@@ -120,6 +129,7 @@ GAME.createGameStage = function (canvasId, transport) {
         },
         "move_card": function(action) {
             elements[action.details.destination_element_id] = GAME.createSet(canvas, transport, action.details.destination_element_id, "single", [action.card_id], 100, 10);
+            elements[action.element_id].updateTopCard(action.details.updated_card_id)
         }
     };
 

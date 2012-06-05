@@ -10,6 +10,7 @@ function init() {
             element_id: "set_0",
             action:"move_card",
             details: {
+                owner: "p1"
             }
         });
     };
