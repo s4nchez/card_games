@@ -1,6 +1,6 @@
 var GAME = GAME || {};
 
-GAME.createCard = function(canvas, transport, elementId, card, x, y){
+GAME.createCard = function(canvas, transport, elementId, card, x, y, dropAction){
     var result = {},
         image = canvas.display.image({
             x:x,
@@ -19,6 +19,7 @@ GAME.createCard = function(canvas, transport, elementId, card, x, y){
                     y: image.abs_y
                 }
             });
+            dropAction && dropAction(image.abs_x, image.abs_y);
         }
     });
     result.moveTo = function(x,y){
@@ -81,9 +82,20 @@ GAME.createSet = function(canvas, transport, elementId, setType, cards, initialX
                     }
                 };
                 return pile;
+            },
+            moveCardOut = function(newX, newY){
+                transport.send({
+                    element_id: elementId,
+                    action:"move_card",
+                    details: {
+                        owner: "p1",
+                        x: newX,
+                        y: newY
+                    }
+                });
             };
         pile = createPile();
-        topCard = GAME.createCard(canvas, transport, elementId, cards[0], x+10, y+10);
+        topCard = GAME.createCard(canvas, transport, cards[0], cards[0], x+10, y+10, moveCardOut);
         stack.moveTo = function (newX, newY) {
             x = newX;
             y = newY;
@@ -94,7 +106,7 @@ GAME.createSet = function(canvas, transport, elementId, setType, cards, initialX
         };
         stack.updateTopCard = function(cardId){
           topCard.destroy();
-          topCard = GAME.createCard(canvas, transport, elementId, cardId, x+10, y+10);
+          topCard = GAME.createCard(canvas, transport, cardId, cardId, x+10, y+10, moveCardOut);
         };
         return stack;
     };
@@ -128,7 +140,7 @@ GAME.createGameStage = function (canvasId, transport) {
             element.moveTo(action.details.x, action.details.y);
         },
         "move_card": function(action) {
-            elements[action.details.destination_element_id] = GAME.createSet(canvas, transport, action.details.destination_element_id, "single", [action.card_id], 100, 10);
+            elements[action.details.destination_element_id] = GAME.createSet(canvas, transport, action.details.destination_element_id, "single", [action.card_id], action.details.x, action.details.y);
             elements[action.element_id].updateTopCard(action.details.updated_card_id)
         }
     };
