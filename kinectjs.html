@@ -40,6 +40,11 @@
                     }
                 }
             };
+            detector.notifyCollisions = function(gameComponent){
+                if(currentCollision){
+                    currentCollision.onCollisionAccepted(gameComponent);
+                }
+            };
             return detector;
         };
 
@@ -57,6 +62,9 @@
                     listeners[collisionComponent] && listeners[collisionComponent]["collisionstart"] &&
                             listeners[collisionComponent]["collisionstart"](gameComponent);
                 });
+            };
+            stage.notifyCollisions = function(gameComponent){
+                collisionDetection.notifyCollisions(gameComponent);
             };
             stage.layer = layer;
             stage.on = function(gameComponent, eventType, callback){
@@ -108,7 +116,9 @@
                 cardComponent.on("dragstart", function(){
                     cardComponent.moveToTop();
                 });
-                cardComponent.on("dragstop", function(){
+                cardComponent.on("dragend", function(){
+                    console.log('stoppped!');
+                    stage.notifyCollisions(card);
                 });
                 cardComponent.on("click", function(){
                     cardComponent.moveToTop();
@@ -124,6 +134,11 @@
             };
             card.onCollisionStop = function(otherComponent){
                 border.setAlpha(0);
+            };
+
+            card.onCollisionAccepted = function(otherComponent){
+                border.setStroke("red");
+                layer.draw();
             };
             card.getComponent = function(){
                 return layer;
