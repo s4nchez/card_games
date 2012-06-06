@@ -17,15 +17,25 @@
         var CardGame = {};
 
         CardGame.CollisionDetection = function(){
-            var detector = {};
-            detector.detectCollisionFor = function(gameComponent, components){
+            var detector = {}, currentCollision;
+            detector.detectCollisionFor = function(gameComponent, components, callback){
                 for(var i = 0; i < components.length; i++){
                     var currentComponent = components[i];
                     if(currentComponent !== gameComponent){
                         var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
                         if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
                                 c1.right >= c2.left && c1.left <= c2.right){
-                            console.log('collision with '+JSON.stringify(currentComponent.getModel()));
+                            if(currentComponent !== currentCollision){
+                                currentCollision = currentComponent;
+//                                console.log('collision started with '+JSON.stringify(currentCollision.getModel()));
+                                currentCollision.onCollisionStart(gameComponent);
+                            }
+                        }else{
+                            if(currentCollision){
+//                                console.log('collision stopped with '+JSON.stringify(currentCollision.getModel()));
+                                currentCollision.onCollisionStop(gameComponent);
+                                currentCollision = null;
+                            }
                         }
                     }
                 }
@@ -37,20 +47,29 @@
             var stage = {}, layer = new Kinetic.Layer(),
                     internalStage = new Kinetic.Stage(options),
                     collisionDetection = CardGame.CollisionDetection(),
-                    components = [];
+                    components = [], listeners = {};
             stage.add = function(gameComponent){
                 internalStage.add(gameComponent.getComponent());
                 components.push(gameComponent);
             };
             stage.detectCollisions = function(gameComponent){
-                collisionDetection.detectCollisionFor(gameComponent, components);
+                collisionDetection.detectCollisionFor(gameComponent, components, function(collisionComponent){
+                    listeners[collisionComponent] && listeners[collisionComponent]["collisionstart"] &&
+                            listeners[collisionComponent]["collisionstart"](gameComponent);
+                });
             };
             stage.layer = layer;
+            stage.on = function(gameComponent, eventType, callback){
+                var listenerForComponent = listeners[gameComponent] || {};
+                var listenerForEventType = listenerForComponent[eventType] || {};
+                listenerForComponent[eventType] = callback;
+                listeners[gameComponent] = listenerForComponent;
+            };
             return stage;
         };
 
         CardGame.Card = function(stage, options){
-            var card = {},cardComponent, image,
+            var card = {}, cardComponent, image,
                     layer = stage.layer,
                     imageObj = new Image(),
             border = new Kinetic.Rect({
@@ -83,7 +102,7 @@
                 cardComponent.add(image);
                 layer.draw();
                 cardComponent.on("dragmove", function(){
-                    console.log("dragmove "+JSON.stringify(card.getPoints()));
+//                    console.log("dragmove "+JSON.stringify(card.getPoints()));
                     stage.detectCollisions(card);
                 });
                 cardComponent.on("dragstart", function(){
@@ -94,8 +113,18 @@
                 cardComponent.on("click", function(){
                     cardComponent.moveToTop();
                 });
+                stage.on(card, "collisionstart", function(otherComponent){
+
+                })
             };
             imageObj.src = "cards/classic-cards/"+options.image+".png";
+
+            card.onCollisionStart = function(otherComponent){
+                border.setAlpha(1);
+            };
+            card.onCollisionStop = function(otherComponent){
+                border.setAlpha(0);
+            };
             card.getComponent = function(){
                 return layer;
             };
