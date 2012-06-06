@@ -34,7 +34,7 @@
         };
 
         CardGame.Stage = function(options){
-            var stage = {},
+            var stage = {}, layer = new Kinetic.Layer(),
                     internalStage = new Kinetic.Stage(options),
                     collisionDetection = CardGame.CollisionDetection(),
                     components = [];
@@ -45,36 +45,54 @@
             stage.detectCollisions = function(gameComponent){
                 collisionDetection.detectCollisionFor(gameComponent, components);
             };
+            stage.layer = layer;
             return stage;
         };
 
         CardGame.Card = function(stage, options){
-            var card = {},image,
-                    layer = new Kinetic.Layer(),
-                    imageObj = new Image();
+            var card = {},cardComponent, image,
+                    layer = stage.layer,
+                    imageObj = new Image(),
+            border = new Kinetic.Rect({
+                x: 5,
+                y: 5,
+                width: 82,
+                height: 106,
+                fill: "#FFFFFF",
+                stroke: "#CCCCCC",
+                alpha: 0,
+                strokeWidth: 2
+            });
+            cardComponent = new Kinetic.Group({
+                x: options.x,
+                y: options.y,
+                draggable: true
+            });
+            cardComponent.add(border);
+            layer.add(cardComponent);
             imageObj.onload = function() {
                 image = new Kinetic.Image({
-                    x: options.x,
-                    y: options.y,
+                    x: 10,
+                    y: 10,
                     image: imageObj,
                     width: 72,
                     height: 96,
                     draggable: true
 //                    detectionType: "pixel"
                 });
-                layer.add(image);
-                stage.add(card);
-                image.on("dragmove", function(){
-                    console.log("dragmove");
+                cardComponent.add(image);
+                layer.draw();
+                cardComponent.on("dragmove", function(){
+                    console.log("dragmove "+JSON.stringify(card.getPoints()));
                     stage.detectCollisions(card);
                 });
-                image.on("dragstart", function(){
+                cardComponent.on("dragstart", function(){
+                    cardComponent.moveToTop();
                 });
-                image.on("dragstop", function(){
+                cardComponent.on("dragstop", function(){
                 });
-                image.on("click", function(){
-                    layer.moveToTop();
-                    layer.draw();
+                cardComponent.on("click", function(){
+                    cardComponent.moveToTop();
                 });
             };
             imageObj.src = "cards/classic-cards/"+options.image+".png";
@@ -83,15 +101,16 @@
             };
             card.getPoints = function(){
                 return {
-                    top:image.getY(),
-                    left:image.getX(),
-                    right:image.getX() + image.getWidth(),
-                    bottom:image.getY() + image.getHeight()
+                    top:cardComponent.getY()+5,
+                    left:cardComponent.getX()+5,
+                    right:cardComponent.getX()+5 + image.getWidth(),
+                    bottom:cardComponent.getY()+5 + image.getHeight()
                 };
             };
             card.getModel = function(){
                 return { card_id: options.image };
             };
+            stage.add(card);
             return card;
         };
 
