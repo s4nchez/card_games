@@ -26,12 +26,15 @@
                         if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
                                 c1.right >= c2.left && c1.left <= c2.right){
                             if(currentComponent !== currentCollision){
+                                if(currentCollision != null){
+                                    currentCollision.onCollisionStop(gameComponent);
+                                }
                                 currentCollision = currentComponent;
 //                                console.log('collision started with '+JSON.stringify(currentCollision.getModel()));
                                 currentCollision.onCollisionStart(gameComponent);
                             }
                         }else{
-                            if(currentCollision){
+                            if(currentCollision && currentCollision == currentComponent){
 //                                console.log('collision stopped with '+JSON.stringify(currentCollision.getModel()));
                                 currentCollision.onCollisionStop(gameComponent);
                                 currentCollision = null;
@@ -39,6 +42,8 @@
                         }
                     }
                 }
+
+
             };
             detector.notifyCollisions = function(gameComponent){
                 if(currentCollision){
@@ -174,6 +179,16 @@
                 x: 100,
                 y: 10,
                 image: "7"
+            });
+            CardGame.Card(stage, {
+                x: 200,
+                y: 10,
+                image: "17"
+            });
+            CardGame.Card(stage, {
+                x: 300,
+                y: 10,
+                image: "27"
             });
         };
 
