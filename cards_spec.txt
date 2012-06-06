@@ -12,7 +12,11 @@ basic operations
 * move card(s) to another group
 * move card(s) inside group
 * shuffle group
+* rotate cards
+* action privileges?
+* reset? (get all cards and put back in deck)
 
 * deck is a predefined (hidden)stack
 * game starts with all the cards available
 * player can join game in progress
+* player view points/ orientation?

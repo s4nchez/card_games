@@ -14,38 +14,108 @@
     <script src="http://www.html5canvastutorials.com/libraries/kinetic-v3.9.6.js"></script>
     <script>
 
-        var createCard = function(stage, name, x, y){
-            var layer = new Kinetic.Layer();
-            var imageObj = new Image();
+        var CardGame = {};
+
+        CardGame.CollisionDetection = function(){
+            var detector = {};
+            detector.detectCollisionFor = function(gameComponent, components){
+                for(var i = 0; i < components.length; i++){
+                    var currentComponent = components[i];
+                    if(currentComponent !== gameComponent){
+                        var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
+                        if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
+                                c1.right >= c2.left && c1.left <= c2.right){
+                            console.log('collision with '+JSON.stringify(currentComponent.getModel()));
+                        }
+                    }
+                }
+            };
+            return detector;
+        };
+
+        CardGame.Stage = function(options){
+            var stage = {},
+                    internalStage = new Kinetic.Stage(options),
+                    collisionDetection = CardGame.CollisionDetection(),
+                    components = [];
+            stage.add = function(gameComponent){
+                internalStage.add(gameComponent.getComponent());
+                components.push(gameComponent);
+            };
+            stage.detectCollisions = function(gameComponent){
+                collisionDetection.detectCollisionFor(gameComponent, components);
+            };
+            return stage;
+        };
+
+        CardGame.Card = function(stage, options){
+            var card = {},image,
+                    layer = new Kinetic.Layer(),
+                    imageObj = new Image();
             imageObj.onload = function() {
-                var image = new Kinetic.Image({
-                    x: x,
-                    y: y,
+                image = new Kinetic.Image({
+                    x: options.x,
+                    y: options.y,
                     image: imageObj,
                     width: 72,
                     height: 96,
                     draggable: true
+//                    detectionType: "pixel"
                 });
                 layer.add(image);
-                stage.add(layer);
+                stage.add(card);
+                image.on("dragmove", function(){
+                    console.log("dragmove");
+                    stage.detectCollisions(card);
+                });
+                image.on("dragstart", function(){
+                });
+                image.on("dragstop", function(){
+                });
                 image.on("click", function(){
                     layer.moveToTop();
                     layer.draw();
                 });
             };
-            imageObj.src = "cards/classic-cards/"+name+".png";
+            imageObj.src = "cards/classic-cards/"+options.image+".png";
+            card.getComponent = function(){
+                return layer;
+            };
+            card.getPoints = function(){
+                return {
+                    top:image.getY(),
+                    left:image.getX(),
+                    right:image.getX() + image.getWidth(),
+                    bottom:image.getY() + image.getHeight()
+                };
+            };
+            card.getModel = function(){
+                return { card_id: options.image };
+            };
+            return card;
         };
 
+
         window.onload = function() {
-            var stage = new Kinetic.Stage({
+            var stage = CardGame.Stage({
                 container: "container",
                 width: 800,
                 height: 800
             });
-
-            createCard(stage, "1", 10, 10);
-            createCard(stage, "9", 100, 10);
+            CardGame.Card(stage, {
+                x: 10,
+                y: 10,
+                image: "1"
+            });
+            CardGame.Card(stage, {
+                x: 100,
+                y: 10,
+                image: "7"
+            });
         };
+
+
+
 
     </script>
 </head>
