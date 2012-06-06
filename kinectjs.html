@@ -17,39 +17,52 @@
         var CardGame = {};
 
         CardGame.CollisionDetection = function(){
-            var detector = {}, currentCollision;
-            detector.detectCollisionFor = function(gameComponent, components){
-                for(var i = 0; i < components.length; i++){
-                    var currentComponent = components[i];
-                    if(currentComponent !== gameComponent){
-                        var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
-                        if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
-                                c1.right >= c2.left && c1.left <= c2.right){
-                            if(currentComponent !== currentCollision){
-                                if(currentCollision != null){
-                                    currentCollision.onCollisionStop(gameComponent);
-                                }
-                                currentCollision = currentComponent;
-//                                console.log('collision started with '+JSON.stringify(currentCollision.getModel()));
-                                currentCollision.onCollisionStart(gameComponent);
-                            }
-                        }else{
-                            if(currentCollision && currentCollision == currentComponent){
-//                                console.log('collision stopped with '+JSON.stringify(currentCollision.getModel()));
-                                currentCollision.onCollisionStop(gameComponent);
-                                currentCollision = null;
-                            }
-                        }
+            var detector = {}, currentCollision, checkCollisionBetween, handleCollision, handleNonCollision;
+
+            handleCollision = function(gameComponent, currentComponent){
+                if (currentComponent !== currentCollision) {
+                    if (currentCollision != null) {
+                        currentCollision.onCollisionStop(gameComponent.getModel());
                     }
+                    currentCollision = currentComponent;
+//                    console.log('collision started with '+JSON.stringify(currentCollision.getModel()));
+                    currentCollision.onCollisionStart(gameComponent.getModel());
                 }
-
-
             };
-            detector.notifyCollisions = function(gameComponent){
+
+            handleNonCollision = function(gameComponent, currentComponent){
+                if (currentCollision && currentCollision == currentComponent) {
+//                    console.log('collision stopped with '+JSON.stringify(currentCollision.getModel()));
+                    currentCollision.onCollisionStop(gameComponent.getModel());
+                    currentCollision = null;
+                }
+            };
+
+            checkCollisionBetween = function(gameComponent, currentComponent) {
+                if (currentComponent === gameComponent) {
+                    return;
+                }
+                var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
+                if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
+                        c1.right >= c2.left && c1.left <= c2.right) {
+                    handleCollision(gameComponent, currentComponent);
+                } else {
+                    handleNonCollision(gameComponent, currentComponent);
+                }
+            };
+
+            detector.detectCollision = function(gameComponent, components){
+                for(var i = 0; i < components.length; i++){
+                    checkCollisionBetween(gameComponent, components[i]);
+                }
+            };
+
+            detector.notifyCurrentCollision = function(gameComponent){
                 if(currentCollision){
                     currentCollision.onCollisionAccepted(gameComponent);
                 }
             };
+
             return detector;
         };
 
@@ -58,21 +71,39 @@
                     internalStage = new Kinetic.Stage(options),
                     collisionDetection = CardGame.CollisionDetection(),
                     components = [], listeners = {};
+
+            stage.draw = function(){
+                layer.draw();
+            };
+
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
                 components.push(gameComponent);
             };
+
             stage.detectCollisions = function(gameComponent){
-                collisionDetection.detectCollisionFor(gameComponent, components);
+                collisionDetection.detectCollision(gameComponent, components);
             };
-            stage.notifyCollisions = function(gameComponent){
-                collisionDetection.notifyCollisions(gameComponent);
+
+            stage.notifyCurrentCollision = function(gameComponent){
+                collisionDetection.notifyCurrentCollision(gameComponent);
             };
+
             internalStage.add(layer);
-            stage.draw = function(){
-                layer.draw();
-            };
+
             return stage;
+        };
+
+        CardGame.Collisionable = function(stage, component){
+            component.getComponent().on("dragmove", function(){
+                stage.detectCollisions(component);
+            });
+            component.getComponent().on("dragstart", function(){
+                component.getComponent().moveToTop();
+            });
+            component.getComponent().on("dragend", function(){
+                stage.notifyCurrentCollision(component);
+            });
         };
 
         CardGame.Card = function(stage, options){
@@ -95,7 +126,6 @@
                 draggable: true
             });
             cardComponent.add(border);
-//            layer.add(cardComponent);
             imageObj.onload = function() {
                 image = new Kinetic.Image({
                     x: 10,
@@ -104,7 +134,6 @@
                     width: 72,
                     height: 96,
                     draggable: true
-//                    detectionType: "pixel"
                 });
                 cardComponent.add(image);
                 stage.draw();
@@ -112,34 +141,20 @@
 
             imageObj.src = "cards/classic-cards/"+options.image+".png";
 
-            cardComponent.on("dragmove", function(){
-//                    console.log("dragmove "+JSON.stringify(card.getPoints()));
-                stage.detectCollisions(card);
-            });
-
-            cardComponent.on("dragstart", function(){
-                cardComponent.moveToTop();
-            });
-
-            cardComponent.on("dragend", function(){
-                console.log('stoppped!');
-                stage.notifyCollisions(card);
-            });
-
             cardComponent.on("click", function(){
                 cardComponent.moveToTop();
                 stage.draw();
             });
 
-            card.onCollisionStart = function(otherComponent){
+            card.onCollisionStart = function(model){
                 border.setAlpha(1);
             };
 
-            card.onCollisionStop = function(otherComponent){
+            card.onCollisionStop = function(model){
                 border.setAlpha(0);
             };
 
-            card.onCollisionAccepted = function(otherComponent){
+            card.onCollisionAccepted = function(model){
                 border.setStroke("red");
                 stage.draw();
             };
@@ -160,6 +175,8 @@
             card.getModel = function(){
                 return { card_id: options.image };
             };
+
+            CardGame.Collisionable(stage, card);
 
             stage.add(card);
 
