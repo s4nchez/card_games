@@ -114,25 +114,28 @@
                 });
                 cardComponent.add(image);
                 layer.draw();
-                cardComponent.on("dragmove", function(){
-//                    console.log("dragmove "+JSON.stringify(card.getPoints()));
-                    stage.detectCollisions(card);
-                });
-                cardComponent.on("dragstart", function(){
-                    cardComponent.moveToTop();
-                });
-                cardComponent.on("dragend", function(){
-                    console.log('stoppped!');
-                    stage.notifyCollisions(card);
-                });
-                cardComponent.on("click", function(){
-                    cardComponent.moveToTop();
-                });
-                stage.on(card, "collisionstart", function(otherComponent){
-
-                })
             };
+
             imageObj.src = "cards/classic-cards/"+options.image+".png";
+
+            cardComponent.on("dragmove", function(){
+//                    console.log("dragmove "+JSON.stringify(card.getPoints()));
+                stage.detectCollisions(card);
+            });
+            
+            cardComponent.on("dragstart", function(){
+                cardComponent.moveToTop();
+            });
+
+            cardComponent.on("dragend", function(){
+                console.log('stoppped!');
+                stage.notifyCollisions(card);
+            });
+
+            cardComponent.on("click", function(){
+                cardComponent.moveToTop();
+                layer.draw();
+            });
 
             card.onCollisionStart = function(otherComponent){
                 border.setAlpha(1);
@@ -145,9 +148,11 @@
                 border.setStroke("red");
                 layer.draw();
             };
+
             card.getComponent = function(){
                 return layer;
             };
+
             card.getPoints = function(){
                 return {
                     top:cardComponent.getY()+5,
@@ -156,10 +161,13 @@
                     bottom:cardComponent.getY()+5 + image.getHeight()
                 };
             };
+
             card.getModel = function(){
                 return { card_id: options.image };
             };
+
             stage.add(card);
+
             return card;
         };
 
@@ -181,12 +189,12 @@
                 image: "7"
             });
             CardGame.Card(stage, {
-                x: 200,
+                x: 120,
                 y: 10,
                 image: "17"
             });
             CardGame.Card(stage, {
-                x: 300,
+                x: 140,
                 y: 10,
                 image: "27"
             });
