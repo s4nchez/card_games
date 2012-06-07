@@ -43,8 +43,9 @@ CardGame.CollisionDetection = function(){
 
     detector.notifyCurrentCollision = function(gameComponent){
         if(currentCollision){
-            currentCollision.onCollisionAccepted(gameComponent.getModel());
+            return currentCollision.onCollisionAccepted(gameComponent.getModel());
         }
+        return false;
     };
 
     return detector;

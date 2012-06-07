@@ -32,12 +32,20 @@
                 components.push(gameComponent);
             };
 
+            stage.remove = function(gameComponent){
+                layer.remove(gameComponent.getComponent());
+                console.log("removing");
+                layer.draw();
+            };
+
             stage.detectCollisions = function(gameComponent){
                 collisionDetection.detectCollision(gameComponent, components);
             };
 
             stage.notifyCurrentCollision = function(gameComponent){
-                collisionDetection.notifyCurrentCollision(gameComponent);
+                var destroy = collisionDetection.notifyCurrentCollision(gameComponent);
+                console.log("destroy? "+destroy);
+                destroy && gameComponent.destroy();
             };
 
             internalStage.add(layer);
@@ -57,77 +65,145 @@
             });
         };
 
-        CardGame.Card = function(stage, options){
-            var card = {}, cardComponent, image,
-                    layer = stage.layer,
-                    imageObj = new Image(),
-            border = new Kinetic.Rect({
-                x: 5,
-                y: 5,
-                width: 82,
+        CardGame.Group = function(stage, options) {
+            var group = {}, cards = [],
+            groupComponent = new Kinetic.Rect({
+                x: options.x,
+                y: options.y,
                 height: 106,
                 fill: "#FFFFFF",
                 stroke: "#CCCCCC",
-                alpha: 0,
-                strokeWidth: 2
+                strokeWidth: 2,
+                draggable: true
+            }),
+            configureCards = function() {
+                for(var i = 0; i < options.cards.length; i++) {
+                    var card = CardGame.Card(stage, {
+                        image: options.cards[i],
+                        group: group
+                    });
+                    cards.push(card);
+                }
+            },
+            // seems a little slow, it seems plausible that it'll actually be faster to group on dragstart and ungroup on dragend
+            redrawInternals = function(){
+                group.getComponent().setWidth(calculatedWidth(cards.length));
+                group.getComponent().setAlpha(calculatedAlpha(cards.length));
+
+                for (var i = 0; i < cards.length; i++) {
+                    var card = cards[i].getComponent();
+                    card.setX(calculatedX(i, groupComponent.getX()));
+                    card.setY(calculatedY(i, groupComponent.getY()));
+                    card.moveToTop();
+                }
+            },
+            calculatedX = function(cardIndex, boundingX) {
+                return cardIndex * 15 + 5 + boundingX;
+            },
+            calculatedY = function(cardIndex, boundingY) {
+                return 5 + boundingY;
+            },
+            calculatedWidth = function(cardCount) {
+                return 82 + ((cardCount - 1) * 15);
+            },
+            calculatedAlpha = function(cardCount) {
+                return (cards.length > 1 ? 1 : 0);
+            };
+
+            group.getComponent = function(){
+                return groupComponent;
+            };
+
+            group.onCollisionStart = function(model){
+            };
+
+            groupComponent.on("dragmove", function(){
+                redrawInternals();
             });
-            cardComponent = new Kinetic.Group({
+
+            group.onCollisionStop = function(model){
+            };
+
+            group.onCollisionAccepted = function(model){
+            };
+
+            group.getPoints = function(){
+                return {
+                    top:groupComponent.getY(),
+                    left:groupComponent.getX(),
+                    right:groupComponent.getX() + groupComponent.getWidth(),
+                    bottom:groupComponent.getY() + groupComponent.getHeight()
+                };
+            };
+
+            group.getModel = function(){
+                return { group_id: "group_" + options.cards.join("_") };
+            };
+
+            group.remove = function(card) {
+                var ix = cards.indexOf(card);
+                cards.splice(ix, 1);
+                if (cards.length == 0) {
+                    group.destroy();
+                }
+                else {
+                    redrawInternals();
+                }
+            };
+
+            group.destroy = function(){
+                stage.remove(group);
+            };
+
+            CardGame.Collisionable(stage, group);
+
+            stage.add(group);
+            configureCards();
+            redrawInternals();
+
+            return group;
+        };
+
+        CardGame.Card = function(stage, options){
+            var card = {},
+            imageObj = new Image(),
+            group = options.group,
+            image = new Kinetic.Image({
                 x: options.x,
                 y: options.y,
+                width: 72,
+                height: 96,
                 draggable: true
             });
-            cardComponent.add(border);
+
             imageObj.onload = function() {
-                image = new Kinetic.Image({
-                    x: 10,
-                    y: 10,
-                    image: imageObj,
-                    width: 72,
-                    height: 96,
-                    draggable: true
-                });
-                cardComponent.add(image);
+                image.setImage(imageObj);
                 stage.draw();
             };
 
             imageObj.src = "cards/classic-cards/"+options.image+".png";
 
-            cardComponent.on("click", function(){
-                cardComponent.moveToTop();
-                stage.draw();
+            image.on("dragend", function() {
+                CardGame.Group(stage, {
+                    x: card.getComponent().getX(),
+                    y: card.getComponent().getY(),
+                    cards: [card.getModel().card_id]
+                });
+                card.destroy();
             });
 
-            card.onCollisionStart = function(model){
-                border.setAlpha(1);
-            };
-
-            card.onCollisionStop = function(model){
-                border.setAlpha(0);
-            };
-
-            card.onCollisionAccepted = function(model){
-                border.setStroke("red");
-                stage.draw();
-            };
-
             card.getComponent = function(){
-                return cardComponent;
-            };
-
-            card.getPoints = function(){
-                return {
-                    top:cardComponent.getY()+5,
-                    left:cardComponent.getX()+5,
-                    right:cardComponent.getX()+5 + image.getWidth(),
-                    bottom:cardComponent.getY()+5 + image.getHeight()
-                };
+                return image;
             };
 
             card.getModel = function(){
                 return { card_id: options.image };
             };
 
-            CardGame.Collisionable(stage, card);
+            card.destroy = function(){
+                group.remove(card);
+                stage.remove(card);
+            };
 
             stage.add(card);
 
@@ -141,25 +217,20 @@
                 width: 800,
                 height: 800
             });
-            CardGame.Card(stage, {
+            CardGame.Group(stage, {
                 x: 10,
                 y: 10,
-                image: "1"
+                cards: [1]
             });
-            CardGame.Card(stage, {
+            CardGame.Group(stage, {
                 x: 100,
                 y: 10,
-                image: "7"
+                cards: [7, 17, 27]
             });
-            CardGame.Card(stage, {
-                x: 120,
-                y: 10,
-                image: "17"
-            });
-            CardGame.Card(stage, {
-                x: 140,
-                y: 10,
-                image: "27"
+            CardGame.Group(stage, {
+                x: 300,
+                y: 20,
+                cards: [2, 3, 4, 5, 6]
             });
         };
 
