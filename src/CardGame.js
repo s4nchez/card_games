@@ -49,4 +49,67 @@ CardGame.CollisionDetection = function(){
     };
 
     return detector;
-}
+};
+
+CardGame.GameUI = function(){
+    var game = {},
+        cards = [],
+        groupCounter = -1;
+
+    _.extend(game, Backbone.Events);
+
+    var addCard = function(id, groupId) {
+        game.trigger("CardAdded:" + groupId, id);
+        cards.push({
+            id: id,
+            groupId: groupId
+        });
+    };
+
+    var addGroup = function() {
+        groupCounter += 1;
+        var groupId = "group_" + groupCounter;
+        game.trigger("GroupCreated", groupId);
+        return groupId;
+    };
+
+    game.init = function(ids){
+        var groupId = addGroup();
+        for(var i in ids){
+            addCard(ids[i], groupId);
+        }
+    };
+
+    game.startMoving = function(id) {
+        var groupId;
+        for(var i in cards) {
+            if(cards[i].id === id) {
+                groupId = cards[i].groupId;
+                cards[i].groupId = undefined;
+            }
+        }
+        game.trigger("CardRemoved:" + groupId, id);
+    };
+
+    game.droppedOut = function(id) {
+        var groupId = addGroup();
+        addCard(id, groupId);
+    };
+
+    game.receiveCard = function(draggedId, droppedOnId) {
+        var groupId;
+        for(var i in cards) {
+            if(cards[i].id === droppedOnId) {
+                groupId = cards[i].groupId;
+            }
+        }
+        for(var i in cards) {
+            if(cards[i].id === draggedId) {
+                cards[i].groupId = groupId;
+            }
+        }
+        game.trigger("CardAdded:" + groupId, draggedId);
+    };
+
+    return game;
+};
