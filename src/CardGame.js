@@ -70,15 +70,15 @@ CardGame.GameUI = function(){
         });
     };
 
-    var addGroup = function() {
+    var addGroup = function(x, y) {
         groupCounter += 1;
         var groupId = "group_" + groupCounter;
-        game.trigger("GroupCreated", groupId);
+        game.trigger("GroupCreated", groupId, x, y);
         return groupId;
     };
 
     game.init = function(ids){
-        var groupId = addGroup();
+        var groupId = addGroup(10, 10);
         for(var i in ids){
             addCard(ids[i], groupId);
         }
@@ -95,8 +95,8 @@ CardGame.GameUI = function(){
         game.trigger("CardRemoved:" + groupId, id);
     };
 
-    game.droppedOut = function(id) {
-        var groupId = addGroup();
+    game.droppedOut = function(id, x, y) {
+        var groupId = addGroup(x, y);
         addCard(id, groupId);
     };
 

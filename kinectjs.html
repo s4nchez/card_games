@@ -53,11 +53,11 @@
 
             internalStage.add(layer);
 
-            ui.on("GroupCreated", function(groupId){
+            ui.on("GroupCreated", function(groupId, x, y){
                 console.log("group "+groupId+" created");
                 stage.add(CardGame.Group(stage, ui, {
-                    x: 10,
-                    y: 10,
+                    x: x,
+                    y: y,
                     groupId: groupId,
                     cards: []
                 }))
@@ -231,7 +231,7 @@
             };
 
             card.onNoCollisionFound = function(){
-                ui.droppedOut(options.image);
+                ui.droppedOut(options.image, image.getX(), image.getY());
                 return true;
             };
 

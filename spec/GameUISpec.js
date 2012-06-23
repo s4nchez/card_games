@@ -7,7 +7,7 @@ describe("Game UI", function () {
         game.on("GroupCreated", stageListener);
         game.on("CardAdded:group_0", groupListener);
         game.init([1, 2, 3]);
-        expect(stageListener).toHaveBeenCalledWith("group_0");
+        expect(stageListener).toHaveBeenCalledWith("group_0", 10, 10);
         expect(groupListener).toHaveBeenCalledWith(1);
         expect(groupListener).toHaveBeenCalledWith(2);
         expect(groupListener).toHaveBeenCalledWith(3);
@@ -24,8 +24,8 @@ describe("Game UI", function () {
         game.init([1, 2, 3]);
         game.startMoving(2);
         expect(group0Listener).toHaveBeenCalledWith(2);
-        game.droppedOut(2);
-        expect(stageListener).toHaveBeenCalledWith("group_1");
+        game.droppedOut(2, 20, 20);
+        expect(stageListener).toHaveBeenCalledWith("group_1", 20, 20);
         expect(group1Listener).toHaveBeenCalledWith(2);
     });
 
