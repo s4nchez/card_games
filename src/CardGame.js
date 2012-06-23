@@ -40,7 +40,7 @@ CardGame.CollisionDetection = function(){
     detector.detectCollision = function(gameComponent, components){
         for(var i = 0; i < components.length; i++){
             if(checkCollisionBetween(gameComponent, components[i])){
-                break
+                break;
             }
         }
     };
@@ -49,7 +49,7 @@ CardGame.CollisionDetection = function(){
         if(currentCollision){
             return currentCollision.onCollisionAccepted(gameComponent.getModel());
         }
-        return false;
+        return gameComponent.onNoCollisionFound();
     };
 
     return detector;

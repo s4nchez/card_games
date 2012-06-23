@@ -11,13 +11,16 @@
             border: 1px solid #9C9898;
         }
     </style>
+    <script type="text/javascript" src="lib/underscore-min.js"></script>
+  <script type="text/javascript" src="lib/backbone-min.js"></script>
+
     <script src="http://www.html5canvastutorials.com/libraries/kinetic-v3.9.6.js"></script>
     <script src="src/CardGame.js"></script>
     <script>
 
         var CardGame = CardGame || {};
 
-        CardGame.Stage = function(options){
+        CardGame.Stage = function(ui, options){
             var stage = {}, layer = new Kinetic.Layer(),
                     internalStage = new Kinetic.Stage(options),
                     collisionDetection = CardGame.CollisionDetection(),
@@ -50,6 +53,16 @@
 
             internalStage.add(layer);
 
+            ui.on("GroupCreated", function(groupId){
+                console.log("group "+groupId+" created");
+                stage.add(CardGame.Group(stage, ui, {
+                    x: 10,
+                    y: 10,
+                    groupId: groupId,
+                    cards: []
+                }))
+            });
+
             return stage;
         };
 
@@ -65,7 +78,7 @@
             });
         };
 
-        CardGame.Group = function(stage, options) {
+        CardGame.Group = function(stage, ui, options) {
             var group = {}, cards = [],
             groupComponent = new Kinetic.Rect({
                 x: options.x,
@@ -76,14 +89,12 @@
                 strokeWidth: 2,
                 draggable: true
             }),
-            configureCards = function() {
-                for(var i = 0; i < options.cards.length; i++) {
-                    var card = CardGame.Card(stage, {
-                        image: options.cards[i],
-                        group: group
-                    });
-                    cards.push(card);
-                }
+            addCard = function(cardId){
+                var card = CardGame.Card(stage, ui, {
+                    image: cardId,
+                    group: group
+                });
+                cards.push(card);
             },
             // seems a little slow, it seems plausible that it'll actually be faster to group on dragstart and ungroup on dragend
             redrawInternals = function(){
@@ -127,6 +138,17 @@
             group.onCollisionAccepted = function(model){
             };
 
+            ui.on("CardAdded:"+options.groupId, function(cardId){
+                console.log("Added "+cardId);
+                addCard(cardId);
+                redrawInternals();
+            });
+
+            ui.on("CardRemoved:"+options.groupId, function(cardId){
+                console.log("Removed "+cardId);
+                group.remove(cardId);
+            });
+
             group.getPoints = function(){
                 return {
                     top:groupComponent.getY(),
@@ -158,13 +180,11 @@
             CardGame.Collisionable(stage, group);
 
             stage.add(group);
-            configureCards();
-            redrawInternals();
 
             return group;
         };
 
-        CardGame.Card = function(stage, options){
+        CardGame.Card = function(stage, ui, options){
             var card = {},
             imageObj = new Image(),
             group = options.group,
@@ -183,13 +203,8 @@
 
             imageObj.src = "cards/classic-cards/"+options.image+".png";
 
-            image.on("dragend", function() {
-                CardGame.Group(stage, {
-                    x: card.getComponent().getX(),
-                    y: card.getComponent().getY(),
-                    cards: [card.getModel().card_id]
-                });
-                card.destroy();
+            image.on("dragstart", function(){
+                ui.startMoving(options.image);
             });
 
             card.getComponent = function(){
@@ -200,10 +215,32 @@
                 return { card_id: options.image };
             };
 
+            card.getPoints = function () {
+                return {
+                    top:image.getY(),
+                    left:image.getX(),
+                    right:image.getX() + image.getWidth(),
+                    bottom:image.getY() + image.getHeight()
+                };
+            };
+            card.onCollisionStart = function () {
+            };
+            card.onCollisionStop = function () {
+            };
+            card.onCollisionAccepted = function(){
+            };
+
+            card.onNoCollisionFound = function(){
+                ui.droppedOut(options.image);
+                return true;
+            };
+
             card.destroy = function(){
-                group.remove(card);
                 stage.remove(card);
             };
+
+
+            CardGame.Collisionable(stage, card);
 
             stage.add(card);
 
@@ -212,26 +249,14 @@
 
 
         window.onload = function() {
-            var stage = CardGame.Stage({
+            var ui = CardGame.GameUI();
+            var stage = CardGame.Stage(ui, {
                 container: "container",
                 width: 800,
                 height: 800
             });
-            CardGame.Group(stage, {
-                x: 10,
-                y: 10,
-                cards: [1]
-            });
-            CardGame.Group(stage, {
-                x: 100,
-                y: 10,
-                cards: [7, 17, 27]
-            });
-            CardGame.Group(stage, {
-                x: 300,
-                y: 20,
-                cards: [2, 3, 4, 5, 6]
-            });
+
+            ui.init([7, 17, 27]);
         };
 
 

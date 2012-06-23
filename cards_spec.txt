@@ -20,3 +20,9 @@ basic operations
 * game starts with all the cards available
 * player can join game in progress
 * player view points/ orientation?
+
+
+--
+TODO
+
+UI model needs to know group position for create and droppedOut

@@ -1,5 +1,5 @@
 describe("Collision detection", function () {
-    var underTest = CardGame.CollisionDetection(),
+    var underTest,
         createComponent = function (name, top, left, right, bottom) {
             var c = {}, points = {top:top, right:right, left:left, bottom:bottom };
             c.getPoints = function () {
@@ -14,6 +14,8 @@ describe("Collision detection", function () {
             };
             c.onCollisionAccepted = function(){
             };
+            c.onNoCollisionFound = function(){
+            };
             c.moveTo = function (top, left, right, bottom) {
                 points = {top:top, right:right, left:left, bottom:bottom };
             };
@@ -21,7 +23,7 @@ describe("Collision detection", function () {
         };
 
     beforeEach(function () {
-
+        underTest = CardGame.CollisionDetection();
     });
 
     describe("Basic collisions", function () {
@@ -146,5 +148,13 @@ describe("Collision detection", function () {
         });
     });
 
-
+    describe("No collision event", function() {
+        it("should notify the moving object that it has collided with nothing", function() {
+            var ca = createComponent("a", 10, 10, 20, 20);
+            spyOn(ca, "onNoCollisionFound");
+            underTest.detectCollision(ca, [ca]);
+            underTest.notifyCurrentCollision(ca);
+            expect(ca.onNoCollisionFound).toHaveBeenCalled();
+        });
+    });
 });
