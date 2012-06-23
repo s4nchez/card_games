@@ -33,11 +33,13 @@
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
                 components.push(gameComponent);
+                //sort here based on gameComponent.getComponent().getZIndex() - descending order
             };
 
             stage.remove = function(gameComponent){
+                var ix = components.indexOf(gameComponent);
+                components.splice(ix, 1);
                 layer.remove(gameComponent.getComponent());
-                console.log("removing");
                 layer.draw();
             };
 
@@ -47,20 +49,20 @@
 
             stage.notifyCurrentCollision = function(gameComponent){
                 var destroy = collisionDetection.notifyCurrentCollision(gameComponent);
-                console.log("destroy? "+destroy);
-                destroy && gameComponent.destroy();
+                if(destroy){
+                    stage.remove(gameComponent);
+                }
             };
 
             internalStage.add(layer);
 
             ui.on("GroupCreated", function(groupId, x, y){
-                console.log("group "+groupId+" created");
-                stage.add(CardGame.Group(stage, ui, {
+                CardGame.Group(stage, ui, {
                     x: x,
                     y: y,
                     groupId: groupId,
                     cards: []
-                }))
+                });
             });
 
             return stage;
@@ -79,7 +81,7 @@
         };
 
         CardGame.Group = function(stage, ui, options) {
-            var group = {}, cards = [],
+            var groupId = options.groupId, group = {}, cards = [],
             groupComponent = new Kinetic.Rect({
                 x: options.x,
                 y: options.y,
@@ -118,7 +120,7 @@
                 return 82 + ((cardCount - 1) * 15);
             },
             calculatedAlpha = function(cardCount) {
-                return (cards.length > 1 ? 1 : 0);
+                return (cards.length > 1 ? 1 : 1);
             };
 
             group.getComponent = function(){
@@ -136,6 +138,7 @@
             };
 
             group.onCollisionAccepted = function(model){
+                console.log("hey group from "+groupId);
             };
 
             ui.on("CardAdded:"+options.groupId, function(cardId){
@@ -146,7 +149,11 @@
 
             ui.on("CardRemoved:"+options.groupId, function(cardId){
                 console.log("Removed "+cardId);
-                group.remove(cardId);
+                for(var i = 0; i < cards.length; i++){
+                    if(cards[i].getModel().card_id === cardId){
+                        group.remove(cards[i]);
+                    }
+                }
             });
 
             group.getPoints = function(){
@@ -159,22 +166,18 @@
             };
 
             group.getModel = function(){
-                return { group_id: "group_" + options.cards.join("_") };
+                return { group_id: groupId };
             };
 
             group.remove = function(card) {
                 var ix = cards.indexOf(card);
                 cards.splice(ix, 1);
                 if (cards.length == 0) {
-                    group.destroy();
+                    stage.remove(group);
                 }
                 else {
                     redrawInternals();
                 }
-            };
-
-            group.destroy = function(){
-                stage.remove(group);
             };
 
             CardGame.Collisionable(stage, group);
@@ -228,17 +231,13 @@
             card.onCollisionStop = function () {
             };
             card.onCollisionAccepted = function(){
+                console.log("hey");
             };
 
             card.onNoCollisionFound = function(){
                 ui.droppedOut(options.image, image.getX(), image.getY());
                 return true;
             };
-
-            card.destroy = function(){
-                stage.remove(card);
-            };
-
 
             CardGame.Collisionable(stage, card);
 
