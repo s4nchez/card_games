@@ -33,7 +33,9 @@
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
                 components.push(gameComponent);
-                //sort here based on gameComponent.getComponent().getZIndex() - descending order
+                components.sort(function(a,b){
+                    return b.getComponent().getZIndex() - a.getComponent().getZIndex();
+                });
             };
 
             stage.remove = function(gameComponent){
@@ -230,8 +232,9 @@
             };
             card.onCollisionStop = function () {
             };
-            card.onCollisionAccepted = function(){
-                console.log("hey");
+            card.onCollisionAccepted = function(model){
+                ui.receiveCard(model.card_id, options.image);
+                return true;
             };
 
             card.onNoCollisionFound = function(){
