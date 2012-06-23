@@ -93,7 +93,7 @@ describe("Collision detection", function () {
     });
 
     describe("Multiple collisions", function () {
-        it("should notify all collisions?", function () {
+        it("should notify just first collision", function () {
             var ca = createComponent("a", 10, 10, 20, 20),
                 cb = createComponent("b", 10, 10, 20, 20),
                 cc = createComponent("c", 10, 10, 20, 20);
@@ -101,7 +101,7 @@ describe("Collision detection", function () {
             spyOn(cc, "onCollisionStart");
             underTest.detectCollision(ca, [ca, cb, cc]);
             expect(cb.onCollisionStart).toHaveBeenCalledWith("a");
-            expect(cc.onCollisionStart).toHaveBeenCalledWith("a")
+            expect(cc.onCollisionStart).not.toHaveBeenCalledWith("a")
         });
     });
 
@@ -133,7 +133,7 @@ describe("Collision detection", function () {
             expect(cb.onCollisionAccepted).toHaveBeenCalledWith("a");
         });
 
-        it("should only notify collision accepted for last collision", function(){
+        it("should only notify collision accepted for first collision", function(){
             var ca = createComponent("a", 10, 10, 20, 20),
                 cb = createComponent("b", 10, 10, 20, 20),
                 cc = createComponent("c", 10, 10, 20, 20);
@@ -141,8 +141,8 @@ describe("Collision detection", function () {
             spyOn(cc, "onCollisionAccepted");
             underTest.detectCollision(ca, [ca, cb, cc]);
             underTest.notifyCurrentCollision(ca);
-            expect(cb.onCollisionAccepted).not.toHaveBeenCalled();
-            expect(cc.onCollisionAccepted).toHaveBeenCalledWith("a");
+            expect(cb.onCollisionAccepted).toHaveBeenCalled();
+            expect(cc.onCollisionAccepted).not.toHaveBeenCalledWith("a");
         });
     });
 

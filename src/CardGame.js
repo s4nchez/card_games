@@ -24,20 +24,24 @@ CardGame.CollisionDetection = function(){
 
     checkCollisionBetween = function(gameComponent, currentComponent) {
         if (currentComponent === gameComponent) {
-            return;
+            return false;
         }
         var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
         if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
             c1.right >= c2.left && c1.left <= c2.right) {
             handleCollision(gameComponent, currentComponent);
+            return true;
         } else {
             handleNonCollision(gameComponent, currentComponent);
+            return false;
         }
     };
 
     detector.detectCollision = function(gameComponent, components){
         for(var i = 0; i < components.length; i++){
-            checkCollisionBetween(gameComponent, components[i]);
+            if(checkCollisionBetween(gameComponent, components[i])){
+                break
+            }
         }
     };
 
