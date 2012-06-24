@@ -22,9 +22,12 @@
 
         CardGame.Stage = function(ui, options){
             var stage = {}, layer = new Kinetic.Layer(),
-                    internalStage = new Kinetic.Stage(options),
-                    collisionDetection = CardGame.CollisionDetection(),
-                    components = [], listeners = {};
+                internalStage = new Kinetic.Stage(options),
+                collisionDetection = CardGame.CollisionDetection(),
+                components = [],
+                byZIndex = function (a, b) {
+                    return b.getComponent().getZIndex() - a.getComponent().getZIndex();
+                };
 
             stage.draw = function(){
                 layer.draw();
@@ -33,9 +36,7 @@
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
                 components.push(gameComponent);
-                components.sort(function(a,b){
-                    return b.getComponent().getZIndex() - a.getComponent().getZIndex();
-                });
+                components.sort(byZIndex);
             };
 
             stage.remove = function(gameComponent){
@@ -93,13 +94,6 @@
                 strokeWidth: 2,
                 draggable: true
             }),
-            addCard = function(cardId){
-                var card = CardGame.Card(stage, ui, {
-                    image: cardId,
-                    group: group
-                });
-                cards.push(card);
-            },
             // seems a little slow, it seems plausible that it'll actually be faster to group on dragstart and ungroup on dragend
             redrawInternals = function(){
                 group.getComponent().setWidth(calculatedWidth(cards.length));
@@ -144,15 +138,16 @@
             };
 
             ui.on("CardAdded:"+options.groupId, function(cardId){
-                console.log("Added "+cardId);
-                addCard(cardId);
+                var card = CardGame.Card(stage, ui, {
+                    cardId: cardId
+                });
+                cards.push(card);
                 redrawInternals();
             });
 
             ui.on("CardRemoved:"+options.groupId, function(cardId){
-                console.log("Removed "+cardId);
                 for(var i = 0; i < cards.length; i++){
-                    if(cards[i].getModel().card_id === cardId){
+                    if(cards[i].getModel().cardId === cardId){
                         group.remove(cards[i]);
                     }
                 }
@@ -168,7 +163,7 @@
             };
 
             group.getModel = function(){
-                return { group_id: groupId };
+                return { groupId: groupId };
             };
 
             group.remove = function(card) {
@@ -190,9 +185,8 @@
         };
 
         CardGame.Card = function(stage, ui, options){
-            var card = {},
+            var cardId = options.cardId, card = {},
             imageObj = new Image(),
-            group = options.group,
             image = new Kinetic.Image({
                 x: options.x,
                 y: options.y,
@@ -206,10 +200,10 @@
                 stage.draw();
             };
 
-            imageObj.src = "cards/classic-cards/"+options.image+".png";
+            imageObj.src = "cards/classic-cards/"+cardId+".png";
 
             image.on("dragstart", function(){
-                ui.startMoving(options.image);
+                ui.startMoving(cardId);
             });
 
             card.getComponent = function(){
@@ -217,7 +211,7 @@
             };
 
             card.getModel = function(){
-                return { card_id: options.image };
+                return { cardId: cardId };
             };
 
             card.getPoints = function () {
@@ -228,17 +222,23 @@
                     bottom:image.getY() + image.getHeight()
                 };
             };
+
             card.onCollisionStart = function () {
             };
+
             card.onCollisionStop = function () {
             };
+
             card.onCollisionAccepted = function(model){
-                ui.receiveCard(model.card_id, options.image);
-                return true;
+                if(model.cardId){
+                    ui.receiveCard(model.cardId, cardId);
+                    return true;
+                }
+                return false;
             };
 
             card.onNoCollisionFound = function(){
-                ui.droppedOut(options.image, image.getX(), image.getY());
+                ui.droppedOut(cardId, image.getX(), image.getY());
                 return true;
             };
 
