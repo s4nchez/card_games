@@ -85,7 +85,7 @@ CardGame.GameUI = function(){
     };
 
     game.startMoving = function(id) {
-        var groupId;
+        var groupId, groupHasCardsLeft = false;
         for(var i in cards) {
             if(cards[i].id === id) {
                 groupId = cards[i].groupId;
@@ -93,6 +93,12 @@ CardGame.GameUI = function(){
             }
         }
         game.trigger("CardRemoved:" + groupId, id);
+        for(var i in cards) {
+            if(cards[i].groupId === groupId){
+                groupHasCardsLeft = true;
+            }
+        }
+        !groupHasCardsLeft && game.trigger("GroupRemoved", groupId);
     };
 
     game.droppedOut = function(id, x, y) {

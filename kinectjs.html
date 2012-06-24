@@ -26,6 +26,12 @@
                 components = [],
                 byZIndex = function (a, b) {
                     return b.getComponent().getZIndex() - a.getComponent().getZIndex();
+                },
+                remove = function(gameComponent){
+                    var ix = components.indexOf(gameComponent);
+                    components.splice(ix, 1);
+                    layer.remove(gameComponent.getComponent());
+                    layer.draw();
                 };
 
             stage.draw = function(){
@@ -39,10 +45,7 @@
             };
 
             stage.remove = function(gameComponent){
-                var ix = components.indexOf(gameComponent);
-                components.splice(ix, 1);
-                layer.remove(gameComponent.getComponent());
-                layer.draw();
+
             };
 
             stage.detectCollisions = function(gameComponent){
@@ -52,7 +55,7 @@
             stage.notifyCurrentCollision = function(gameComponent){
                 var destroy = collisionDetection.notifyCurrentCollision(gameComponent);
                 if(destroy){
-                    stage.remove(gameComponent);
+                    remove(gameComponent);
                 }
             };
 
@@ -65,6 +68,15 @@
                     groupId: groupId,
                     cards: []
                 });
+            });
+
+            ui.on("GroupRemoved", function(groupId){
+                for(var i in components){
+                    var component = components[i];
+                    if(component.getModel().groupId && component.getModel().groupId === groupId){
+                        remove(component);
+                    }
+                }
             });
 
             return stage;
@@ -116,6 +128,11 @@
             },
             calculatedAlpha = function(cardCount) {
                 return (cards.length > 1 ? 1 : 1);
+            },
+            removeCard = function(cardComponent){
+                var ix = cards.indexOf(cardComponent);
+                cards.splice(ix, 1);
+                redrawInternals();
             };
 
             group.getComponent = function(){
@@ -147,7 +164,7 @@
             ui.on("CardRemoved:"+options.groupId, function(cardId){
                 for(var i = 0; i < cards.length; i++){
                     if(cards[i].getModel().cardId === cardId){
-                        group.remove(cards[i]);
+                        removeCard(cards[i]);
                     }
                 }
             });
@@ -163,17 +180,6 @@
 
             group.getModel = function(){
                 return { groupId: groupId };
-            };
-
-            group.remove = function(card) {
-                var ix = cards.indexOf(card);
-                cards.splice(ix, 1);
-                if (cards.length == 0) {
-                    stage.remove(group);
-                }
-                else {
-                    redrawInternals();
-                }
             };
 
             CardGame.Collisionable(stage, group);

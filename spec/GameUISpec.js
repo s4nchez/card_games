@@ -29,6 +29,18 @@ describe("Game UI", function () {
         expect(group1Listener).toHaveBeenCalledWith(2);
     });
 
+    it("should remove group if becomes empty", function(){
+        var game = CardGame.GameUI(),
+            stageListener = jasmine.createSpy(),
+            group0Listener = jasmine.createSpy(),
+            group1Listener = jasmine.createSpy();
+        game.on("GroupCreated", stageListener);
+        game.on("GroupRemoved", group0Listener);
+        game.init([1]);
+        game.startMoving(1);
+        expect(group0Listener).toHaveBeenCalledWith("group_0");
+    });
+
     it("should insert a dropped card into the group", function() {
         var game = CardGame.GameUI(),
             groupListener = jasmine.createSpy();
