@@ -95,25 +95,32 @@
         };
 
         CardGame.Group = function(stage, ui, options) {
-            var groupId = options.groupId, group = {}, cards = [],
-            groupComponent = new Kinetic.Rect({
+            var groupId = options.groupId, group = {}, cards = [], offset = 5,
+            groupComponent = new Kinetic.Group({
+                draggable: true
+            }),
+            border = new Kinetic.Rect({
                 x: options.x,
                 y: options.y,
                 height: 106,
                 fill: "#FFFFFF",
                 stroke: "#CCCCCC",
-                strokeWidth: 2,
-                draggable: true
+                strokeWidth: 2
             }),
-            // seems a little slow, it seems plausible that it'll actually be faster to group on dragstart and ungroup on dragend
             redrawInternals = function(){
-                group.getComponent().setWidth(calculatedWidth(cards.length));
-                group.getComponent().setAlpha(calculatedAlpha(cards.length));
-
-                for (var i = 0; i < cards.length; i++) {
+                var i = 0, pos = border.getAbsolutePosition();
+                border.setWidth(calculatedWidth(cards.length));
+                mirror.clear();
+                for(i =0;i < cards.length;i++){
+                    //because mirror adds card to group, x/y are relative
+                    mirror.addCard(cards[i].getModel().cardId, calculatedX(i, border.getX()), calculatedY(i, border.getY()));
+                }
+                for (i = 0; i < cards.length; i++) {
+                    //because cards are outside group, x/y are absolute
                     var card = cards[i].getComponent();
-                    card.setX(calculatedX(i, groupComponent.getX()));
-                    card.setY(calculatedY(i, groupComponent.getY()));
+                    card.setAlpha(1);
+                    card.setX(calculatedX(i, pos.x));
+                    card.setY(calculatedY(i, pos.y));
                     card.moveToTop();
                 }
             },
@@ -133,7 +140,41 @@
                 var ix = cards.indexOf(cardComponent);
                 cards.splice(ix, 1);
                 redrawInternals();
-            };
+            },
+            cardsMirroring = function(groupComponent){
+                var mirror = {}, cardImages = [];
+
+                mirror.addCard = function (card, x, y) {
+                    var image = new Kinetic.Image({
+                        x:x,
+                        y:y,
+                        width:72,
+                        height:96
+                    });
+
+                    (function () {
+                        var imageObj = new Image();
+                        imageObj.onload = function () {
+                            image.setImage(imageObj);
+                            cardImages.push(image);
+                            groupComponent.add(image);
+                            stage.draw();
+                        };
+                        imageObj.src = "cards/classic-cards/" + card + ".png";
+                    })();
+                };
+
+                mirror.clear = function(){
+                    for(var i = 0; i < cardImages.length;i++){
+                        groupComponent.remove(cardImages[i]);
+                    }
+                };
+
+                return mirror;
+            },
+            mirror = cardsMirroring(groupComponent);
+
+            groupComponent.add(border);
 
             group.getComponent = function(){
                 return groupComponent;
@@ -142,15 +183,14 @@
             group.onCollisionStart = function(model){
             };
 
-            groupComponent.on("dragmove", function(){
-                redrawInternals();
-            });
-
             group.onCollisionStop = function(model){
             };
 
             group.onCollisionAccepted = function(model){
                 console.log("hey group from "+groupId);
+            };
+
+            group.onNoCollisionFound = function(){
             };
 
             ui.on("CardAdded:"+options.groupId, function(cardId){
@@ -170,17 +210,31 @@
             });
 
             group.getPoints = function(){
+                var pos = border.getAbsolutePosition();
                 return {
-                    top:groupComponent.getY(),
-                    left:groupComponent.getX(),
-                    right:groupComponent.getX() + groupComponent.getWidth(),
-                    bottom:groupComponent.getY() + groupComponent.getHeight()
+                    top:pos.y,
+                    left:pos.x,
+                    right:pos.x + border.getWidth(),
+                    bottom:pos.y + border.getHeight()
                 };
             };
 
             group.getModel = function(){
                 return { groupId: groupId };
             };
+
+            (function(){
+                groupComponent.on("dragstart", function(){
+                    //hide card components
+                    for(var i = 0;i < cards.length;i++){
+                        cards[i].getComponent().setAlpha(0);
+                    }
+                });
+
+                groupComponent.on("dragend", function(){
+                    redrawInternals();
+                });
+            })();
 
             CardGame.Collisionable(stage, group);
 
