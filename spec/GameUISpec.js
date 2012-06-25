@@ -47,7 +47,7 @@ describe("Game UI", function () {
         game.init([1, 2, 3]);
         game.startMoving(2);
         game.on("CardAdded:group_0", groupListener);
-        game.receiveCard(2, 3);
+        game.receiveCard(2, "group_0");
         expect(groupListener).toHaveBeenCalledWith(2);
     });
 });

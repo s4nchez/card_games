@@ -25,7 +25,4 @@ basic operations
 --
 TODO
 
-Replace moving cards by group background
 Detect position of card dropped within group
-Move "empty group" detection to GameUI
-Simplify card removal from group

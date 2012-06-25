@@ -28,8 +28,10 @@
                     return b.getComponent().getZIndex() - a.getComponent().getZIndex();
                 },
                 remove = function(gameComponent){
-                    var ix = components.indexOf(gameComponent);
-                    components.splice(ix, 1);
+                    if(gameComponent.getModel().groupId){
+                        var ix = components.indexOf(gameComponent);
+                        components.splice(ix, 1);
+                    }
                     layer.remove(gameComponent.getComponent());
                     layer.draw();
                 };
@@ -40,12 +42,10 @@
 
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
-                components.push(gameComponent);
-                components.sort(byZIndex);
-            };
-
-            stage.remove = function(gameComponent){
-
+                if(gameComponent.getModel().groupId){
+                    components.push(gameComponent);
+                    components.sort(byZIndex);
+                }
             };
 
             stage.detectCollisions = function(gameComponent){
@@ -71,6 +71,8 @@
             });
 
             ui.on("GroupRemoved", function(groupId){
+
+
                 for(var i in components){
                     var component = components[i];
                     if(component.getModel().groupId && component.getModel().groupId === groupId){
@@ -110,6 +112,12 @@
                 stroke: "#CCCCCC",
                 strokeWidth: 2
             }),
+            hideCardComponents = function(){
+                //hide card components
+                for(var i = 0;i < cards.length;i++){
+                    cards[i].getComponent().setAlpha(0);
+                }
+            },
             redrawInternals = function(){
                 var i = 0, pos = border.getAbsolutePosition();
                 border.setWidth(calculatedWidth(cards.length));
@@ -151,6 +159,7 @@
                     var image = new Kinetic.Image({
                         x:x,
                         y:y,
+                        alpha: 0.5,
                         width:72,
                         height:96
                     });
@@ -184,13 +193,19 @@
             };
 
             group.onCollisionStart = function(model){
+                hideCardComponents();
             };
 
             group.onCollisionStop = function(model){
+                redrawInternals();
             };
 
             group.onCollisionAccepted = function(model){
-                console.log("hey group from "+groupId);
+                if(model.cardId){
+                    ui.receiveCard(model.cardId, groupId);
+                    return true;
+                }
+                return false;
             };
 
             group.onNoCollisionFound = function(){
@@ -227,16 +242,9 @@
             };
 
             (function(){
-                groupComponent.on("dragstart", function(){
-                    //hide card components
-                    for(var i = 0;i < cards.length;i++){
-                        cards[i].getComponent().setAlpha(0);
-                    }
-                });
+                groupComponent.on("dragstart", hideCardComponents);
 
-                groupComponent.on("dragend", function(){
-                    redrawInternals();
-                });
+                groupComponent.on("dragend", redrawInternals);
             })();
 
             CardGame.Collisionable(stage, group);
@@ -293,10 +301,7 @@
             };
 
             card.onCollisionAccepted = function(model){
-                if(model.cardId){
-                    ui.receiveCard(model.cardId, cardId);
-                    return true;
-                }
+
                 return false;
             };
 

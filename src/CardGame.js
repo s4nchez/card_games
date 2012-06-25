@@ -98,6 +98,7 @@ CardGame.GameUI = function(){
                 groupHasCardsLeft = true;
             }
         }
+        console.log("group "+groupId+" has cards left? "+groupHasCardsLeft)
         !groupHasCardsLeft && game.trigger("GroupRemoved", groupId);
     };
 
@@ -107,12 +108,7 @@ CardGame.GameUI = function(){
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
-        var groupId;
-        for(var i in cards) {
-            if(cards[i].id === droppedOnId) {
-                groupId = cards[i].groupId;
-            }
-        }
+        var groupId = droppedOnId;
         for(var i in cards) {
             if(cards[i].id === draggedId) {
                 cards[i].groupId = groupId;
