@@ -25,4 +25,7 @@ basic operations
 --
 TODO
 
-UI model needs to know group position for create and droppedOut
+Replace moving cards by group background
+Detect position of card dropped within group
+Move "empty group" detection to GameUI
+Simplify card removal from group
