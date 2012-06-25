@@ -95,7 +95,10 @@
         };
 
         CardGame.Group = function(stage, ui, options) {
-            var groupId = options.groupId, group = {}, cards = [], offset = 5,
+            var groupId = options.groupId,
+            group = {},
+            cards = [],
+            offset = 5,
             groupComponent = new Kinetic.Group({
                 draggable: true
             }),
@@ -112,11 +115,11 @@
                 border.setWidth(calculatedWidth(cards.length));
                 mirror.clear();
                 for(i =0;i < cards.length;i++){
-                    //because mirror adds card to group, x/y are relative
+                    //because mirror adds card to group component, x/y are relative
                     mirror.addCard(cards[i].getModel().cardId, calculatedX(i, border.getX()), calculatedY(i, border.getY()));
                 }
                 for (i = 0; i < cards.length; i++) {
-                    //because cards are outside group, x/y are absolute
+                    //because cards are outside group component, x/y are absolute
                     var card = cards[i].getComponent();
                     card.setAlpha(1);
                     card.setX(calculatedX(i, pos.x));
@@ -244,7 +247,8 @@
         };
 
         CardGame.Card = function(stage, ui, options){
-            var cardId = options.cardId, card = {},
+            var cardId = options.cardId,
+            card = {},
             imageObj = new Image(),
             image = new Kinetic.Image({
                 x: options.x,
