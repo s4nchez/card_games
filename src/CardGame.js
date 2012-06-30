@@ -59,6 +59,9 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
     var group = {}, cards = [],
         x = initialX,
         y = initialY;
+    group.contains = function(card){
+        return cards.indexOf(card) != -1;
+    };
     group.getPoints = function(){
         return {
             top: y,
@@ -67,72 +70,76 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
             bottom: y + + config.borderOffset * 2 + config.cardHeight
         }
     };
+    group.moveTo = function(newX, newY){
+        x = newX;
+        y = newY;
+    };
     group.addCard = function(cardId){
         cards.push(cardId)
     };
+    group.removeCard = function(card){
+        var index = cards.indexOf(card);
+        cards.splice(index, 1);
+    };
+    group.size = function(){
+        return cards.length;
+    };
+    group.groupId = groupId;
     return group;
 };
 
 CardGame.GameUI = function(){
     var game = {},
-        cards = [],
+        groups = [],
         groupCounter = -1;
 
     _.extend(game, Backbone.Events);
 
-    var addCard = function(id, groupId) {
-        game.trigger("CardAdded:" + groupId, id);
-        cards.push({
-            id: id,
-            groupId: groupId
-        });
+    var addCard = function(id, group) {
+        game.trigger("CardAdded:" + group.groupId, id);
+        group.addCard(id);
     };
 
     var addGroup = function(x, y) {
         groupCounter += 1;
         var groupId = "group_" + groupCounter;
+        var group = CardGame.GroupComponent(groupId, x, y, {});
+        groups.push(group);
         game.trigger("GroupCreated", groupId, x, y);
-        return groupId;
+        return group;
     };
 
     game.init = function(ids){
-        var groupId = addGroup(10, 10);
+        var group = addGroup(10, 10);
         for(var i in ids){
-            addCard(ids[i], groupId);
+            addCard(ids[i], group);
         }
     };
 
     game.startMoving = function(id) {
         var groupId, groupHasCardsLeft = false;
-        for(var i in cards) {
-            if(cards[i].id === id) {
-                groupId = cards[i].groupId;
-                cards[i].groupId = undefined;
+        for(var i in groups) {
+            if(groups[i].contains(id)) {
+                groupId = groups[i].groupId;
+                groups[i].removeCard(id);
+                groupHasCardsLeft = groups[i].size() > 0;
             }
         }
         game.trigger("CardRemoved:" + groupId, id);
-        for(var i in cards) {
-            if(cards[i].groupId === groupId){
-                groupHasCardsLeft = true;
-            }
-        }
-        console.log("group "+groupId+" has cards left? "+groupHasCardsLeft)
         !groupHasCardsLeft && game.trigger("GroupRemoved", groupId);
     };
 
     game.droppedOut = function(id, x, y) {
-        var groupId = addGroup(x, y);
-        addCard(id, groupId);
+        var group = addGroup(x, y);
+        addCard(id, group);
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
-        var groupId = droppedOnId;
-        for(var i in cards) {
-            if(cards[i].id === draggedId) {
-                cards[i].groupId = groupId;
+        for(var i in groups) {
+            if(groups[i].groupId === droppedOnId) {
+                addCard(draggedId, groups[i]);
             }
         }
-        game.trigger("CardAdded:" + groupId, draggedId);
     };
 
     return game;

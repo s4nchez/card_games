@@ -11,10 +11,29 @@ describe("Group Component", function () {
     });
 
     it("should allow searching for card", function () {
-
+        group.addCard(1);
+        group.addCard(2);
+        group.addCard(3);
+        expect(group.contains(1)).toBeTruthy();
+        expect(group.contains(4)).toBeFalsy();
     });
 
-    it("should calculate dimension cards a card is added", function () {
+    it("should have a size", function(){
+        group.addCard(1);
+        group.addCard(2);
+        group.addCard(3);
+        expect(group.size()).toEqual(3);
+    });
+
+    it("should allow removing card", function () {
+        group.addCard(1);
+        group.addCard(2);
+        group.addCard(3);
+        group.removeCard(1);
+        expect(group.contains(1)).toBeFalsy();
+    });
+
+    it("should calculate points cards a card is added", function () {
         group.addCard(1);
         expect(group.getPoints()).toEqual({
             top:7,
@@ -24,7 +43,7 @@ describe("Group Component", function () {
         })
     });
 
-    it("should calculate dimension when more cards are added", function () {
+    it("should calculate points when more cards are added", function () {
         group.addCard(1);
         group.addCard(2);
         group.addCard(3);
@@ -35,5 +54,16 @@ describe("Group Component", function () {
             bottom:7 + 1 + 11 + 1
         })
     });
+
+    it("should calculate points after moving", function(){
+        group.addCard(1);
+        group.moveTo(4, 6);
+        expect(group.getPoints()).toEqual({
+            top:6,
+            left:4,
+            right:4 + 1 + 13 + 1,
+            bottom:6 + 1 + 11 + 1
+        })
+    })
 
 });
