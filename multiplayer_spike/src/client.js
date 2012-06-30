@@ -6,7 +6,7 @@ GAME.createCard = function(canvas, transport, elementId, card, x, y, dropAction)
             x:x,
             y:y,
             origin:{ x:"top", y:"left" },
-            image:"classic-cards/" + card + ".png"
+            image:"../images/classic-cards/" + card + ".png"
         });
     canvas.addChild(image);
     image.dragAndDrop({
@@ -71,7 +71,7 @@ GAME.createSet = function(canvas, transport, elementId, setType, cards, initialX
                         x:x + 5 + i,
                         y:y + 5 + i,
                         origin:{ x:"top", y:"left" },
-                        image:"classic-cards/b1fv.png"
+                        image:"../images/classic-cards/b1fv.png"
                     });
                     canvas.addChild(image);
                     cardComponents.push(image)
