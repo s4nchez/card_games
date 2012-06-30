@@ -55,6 +55,24 @@ CardGame.CollisionDetection = function(){
     return detector;
 };
 
+CardGame.GroupComponent = function(groupId, initialX, initialY, config){
+    var group = {}, cards = [],
+        x = initialX,
+        y = initialY;
+    group.getPoints = function(){
+        return {
+            top: y,
+            left: x,
+            right: x + config.borderOffset * 2 + ((cards.length -1) * config.cardFaceWidth) + config.cardWidth,
+            bottom: y + + config.borderOffset * 2 + config.cardHeight
+        }
+    };
+    group.addCard = function(cardId){
+        cards.push(cardId)
+    };
+    return group;
+};
+
 CardGame.GameUI = function(){
     var game = {},
         cards = [],
