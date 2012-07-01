@@ -83,6 +83,7 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         var result = [];
         for(var i in cards){
             result.push({
+                cardId: cards[i],
                 x: x + config.borderOffset + (i * config.cardFaceWidth),
                 relativeX: config.borderOffset + (i * config.cardFaceWidth),
                 y: y + config.borderOffset,

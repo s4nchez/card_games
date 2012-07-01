@@ -65,8 +65,7 @@
                 CardGame.Group(stage, ui, group, {
                     x: x,
                     y: y,
-                    groupId: group.groupId,
-                    cards: []
+                    groupId: group.groupId
                 });
             });
 
@@ -97,7 +96,7 @@
         CardGame.Group = function(stage, ui, groupUI, options) {
             var groupId = options.groupId,
             group = {},
-            cards = [],
+            cards = {},
             offset = 5,
             groupComponent = new Kinetic.Group({
                 x: options.x,
@@ -112,8 +111,8 @@
             }),
             hideCardComponents = function(){
                 //hide card components
-                for(var i = 0;i < cards.length;i++){
-                    cards[i].getComponent().setAlpha(0);
+                for(var cardId in cards){
+                    cards[cardId].getComponent().setAlpha(0);
                 }
             },
             redrawInternals = function(){
@@ -123,18 +122,13 @@
                 mirror.clear();
                 for (i in uiCards) {
                     var cardPosition = uiCards[i];
-                    mirror.addCard(cards[i].getModel().cardId, cardPosition.relativeX, cardPosition.relativeY);
-                    var cardComponent = cards[i].getComponent();
+                    mirror.addCard(cardPosition.cardId, cardPosition.relativeX, cardPosition.relativeY);
+                    var cardComponent = cards[cardPosition.cardId].getComponent();
                     cardComponent.setAlpha(1);
                     cardComponent.setX(cardPosition.x);
                     cardComponent.setY(cardPosition.y);
                     cardComponent.moveToTop();
                 }
-            },
-            removeCard = function(cardComponent){
-                var ix = cards.indexOf(cardComponent);
-                cards.splice(ix, 1);
-                redrawInternals();
             },
             cardsMirroring = function(groupComponent){
                 var mirror = {}, cardImages = [];
@@ -199,16 +193,13 @@
                 var card = CardGame.Card(stage, ui, {
                     cardId: cardId
                 });
-                cards.push(card);
+                cards[cardId] = card;
                 redrawInternals();
             });
 
             groupUI.on("CardRemoved", function(cardId){
-                for(var i = 0; i < cards.length; i++){
-                    if(cards[i].getModel().cardId === cardId){
-                        removeCard(cards[i]);
-                    }
-                }
+                delete cards[cardId];
+                redrawInternals();
             });
 
             group.getPoints = function(){
