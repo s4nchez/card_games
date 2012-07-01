@@ -44,7 +44,7 @@ describe("Collision detection", function () {
             expect(cb.onCollisionStart).toHaveBeenCalledWith("a");
         });
 
-        it("should detect collisions of objects overlapping on top", function () {
+        it("should not detect collisions of objects overlapping from top", function () {
             var ca = createComponent("a", 10, 10, 20, 20),
                 cb = createComponent("b", 20, 10, 20, 30),
                 cc = createComponent("c", 21, 10, 20, 31);
@@ -52,7 +52,7 @@ describe("Collision detection", function () {
             spyOn(cc, "onCollisionStart");
             underTest.detectCollision(ca, [ca, cb]);
             underTest.detectCollision(ca, [ca, cc]);
-            expect(cb.onCollisionStart).toHaveBeenCalledWith("a");
+            expect(cb.onCollisionStart).not.toHaveBeenCalledWith("a");
             expect(cc.onCollisionStart).not.toHaveBeenCalled();
         });
 
@@ -68,7 +68,7 @@ describe("Collision detection", function () {
             expect(cc.onCollisionStart).not.toHaveBeenCalled();
         });
 
-        it("should detect collisions of objects overlapping on right", function () {
+        it("should not detect collisions of objects overlapping on right", function () {
             var ca = createComponent("a", 10, 10, 20, 20),
                 cb = createComponent("b", 10, 20, 30, 20),
                 cc = createComponent("c", 10, 21, 30, 20);
@@ -76,7 +76,7 @@ describe("Collision detection", function () {
             spyOn(cc, "onCollisionStart");
             underTest.detectCollision(ca, [ca, cb]);
             underTest.detectCollision(ca, [ca, cc]);
-            expect(cb.onCollisionStart).toHaveBeenCalledWith("a");
+            expect(cb.onCollisionStart).not.toHaveBeenCalledWith("a");
             expect(cc.onCollisionStart).not.toHaveBeenCalled();
         });
 

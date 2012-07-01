@@ -28,10 +28,8 @@
                     return b.getComponent().getZIndex() - a.getComponent().getZIndex();
                 },
                 remove = function(gameComponent){
-                    if(gameComponent.getModel().groupId){
-                        var ix = components.indexOf(gameComponent);
-                        components.splice(ix, 1);
-                    }
+                    var ix = components.indexOf(gameComponent);
+                    components.splice(ix, 1);
                     layer.remove(gameComponent.getComponent());
                     layer.draw();
                 };
@@ -42,10 +40,8 @@
 
             stage.add = function(gameComponent){
                 layer.add(gameComponent.getComponent());
-                if(gameComponent.getModel().groupId){
-                    components.push(gameComponent);
-                    components.sort(byZIndex);
-                }
+                components.push(gameComponent);
+                components.sort(byZIndex);
             };
 
             stage.detectCollisions = function(gameComponent){
@@ -127,7 +123,6 @@
                     cardComponent.setAlpha(1);
                     cardComponent.setX(cardPosition.x);
                     cardComponent.setY(cardPosition.y);
-                    cardComponent.moveToTop();
                 }
             },
             cardsMirroring = function(groupComponent){
@@ -158,6 +153,7 @@
                     for(var i = 0; i < cardImages.length;i++){
                         groupComponent.remove(cardImages[i]);
                     }
+                    cardImages = [];
                 };
 
                 return mirror;
@@ -277,8 +273,8 @@
             };
 
             card.onCollisionAccepted = function(model){
-
-                return false;
+                ui.cardReceivedCard(model.cardId, cardId);
+                return true;
             };
 
             card.onNoCollisionFound = function(){

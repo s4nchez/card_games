@@ -7,7 +7,12 @@ describe("Game UI", function () {
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
         game.init([1, 2, 3]);
-        expect(CardGame.GroupComponent).toHaveBeenCalledWith("group_0", 10, 10, {});
+        expect(CardGame.GroupComponent).toHaveBeenCalledWith("group_0", 10, 10, {
+            borderOffset:5,
+            cardHeight:96,
+            cardWidth:72,
+            cardFaceWidth: 15
+        });
         expect(stageListener).toHaveBeenCalledWith(group0, 10, 10);
     });
 

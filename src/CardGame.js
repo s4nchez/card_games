@@ -27,8 +27,8 @@ CardGame.CollisionDetection = function(){
             return false;
         }
         var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
-        if (c1.bottom >= c2.top && c1.top <= c2.bottom &&
-            c1.right >= c2.left && c1.left <= c2.right) {
+        if (c1.top >= c2.top && c1.top <= c2.bottom &&
+            c1.left >= c2.left && c1.left <= c2.right) {
             handleCollision(gameComponent, currentComponent);
             return true;
         } else {
@@ -158,9 +158,19 @@ CardGame.GameUI = function(){
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
+        console.log("Card "+draggedId+" dropped on top of group "+droppedOnId);
         for(var i in groups) {
             if(groups[i].groupId === droppedOnId) {
                 groups[i].addCard(draggedId);
+            }
+        }
+    };
+
+    game.cardReceivedCard = function(draggedCarId, droppedOnCardId){
+        console.log("Card "+draggedCarId+" dropped on top of card "+droppedOnCardId);
+        for(var i in groups) {
+            if(groups[i].contains(droppedOnCardId)) {
+                groups[i].addCard(draggedCarId);
             }
         }
     };
