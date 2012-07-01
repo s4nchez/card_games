@@ -52,4 +52,15 @@ describe("Game UI", function () {
         game.receiveCard(2, "group_0");
         expect(group0.addCard).toHaveBeenCalledWith(2);
     });
+
+    it("should add card on top of existing card in group", function(){
+        var group0 = CardGame.GroupComponent("group_0", 10, 10, {});
+        spyOn(CardGame, "GroupComponent").andReturn(group0);
+        var game = CardGame.GameUI();
+        game.init([1, 2, 3]);
+        game.startMoving(3);
+        group0.addCard = jasmine.createSpy();
+        game.cardReceivedCard(3, 1);
+        expect(group0.addCard).toHaveBeenCalledWith(3, 1);
+    });
 });

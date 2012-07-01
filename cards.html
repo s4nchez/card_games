@@ -80,6 +80,7 @@
         CardGame.Collisionable = function(stage, component){
             component.getComponent().on("dragmove", function(){
                 stage.detectCollisions(component);
+                component.getComponent().moveToTop();
             });
             component.getComponent().on("dragstart", function(){
                 component.getComponent().moveToTop();
@@ -123,6 +124,7 @@
                     cardComponent.setAlpha(1);
                     cardComponent.setX(cardPosition.x);
                     cardComponent.setY(cardPosition.y);
+                    cardComponent.moveToTop();
                 }
             },
             cardsMirroring = function(groupComponent){

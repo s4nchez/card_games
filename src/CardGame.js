@@ -96,8 +96,12 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         x = newX;
         y = newY;
     };
-    group.addCard = function(cardId){
-        cards.push(cardId);
+    group.addCard = function(cardId, insertAfterCardId){
+        var idx = 0;
+        if(insertAfterCardId){
+            idx = cards.indexOf(insertAfterCardId) + 1;
+        }
+        cards.splice(idx, 0, cardId);
         group.trigger("CardAdded", cardId);
     };
     group.removeCard = function(card){
@@ -158,7 +162,6 @@ CardGame.GameUI = function(){
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
-        console.log("Card "+draggedId+" dropped on top of group "+droppedOnId);
         for(var i in groups) {
             if(groups[i].groupId === droppedOnId) {
                 groups[i].addCard(draggedId);
@@ -166,11 +169,10 @@ CardGame.GameUI = function(){
         }
     };
 
-    game.cardReceivedCard = function(draggedCarId, droppedOnCardId){
-        console.log("Card "+draggedCarId+" dropped on top of card "+droppedOnCardId);
+    game.cardReceivedCard = function(draggedCardId, droppedOnCardId){
         for(var i in groups) {
             if(groups[i].contains(droppedOnCardId)) {
-                groups[i].addCard(draggedCarId);
+                groups[i].addCard(draggedCardId, droppedOnCardId);
             }
         }
     };
