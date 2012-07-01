@@ -100,11 +100,11 @@
             cards = [],
             offset = 5,
             groupComponent = new Kinetic.Group({
+                x: options.x,
+                y: options.y,
                 draggable: true
             }),
             border = new Kinetic.Rect({
-                x: options.x,
-                y: options.y,
                 height: 106,
                 fill: "#FFFFFF",
                 stroke: "#CCCCCC",
@@ -117,31 +117,19 @@
                 }
             },
             redrawInternals = function(){
-                var i = 0, pos = border.getAbsolutePosition();
-                border.setWidth(calculatedWidth(cards.length));
+                var i = 0, uiCards = groupUI.getCards();
+                border.setWidth(groupUI.getWidth());
+                border.setHeight(groupUI.getHeight());
                 mirror.clear();
-                var uiCards = groupUI.getCards();
                 for (i in uiCards) {
                     var cardPosition = uiCards[i];
-                    mirror.addCard(cards[i].getModel().cardId, calculatedX(i, border.getX()), calculatedY(i, border.getY()));
+                    mirror.addCard(cards[i].getModel().cardId, cardPosition.relativeX, cardPosition.relativeY);
                     var cardComponent = cards[i].getComponent();
                     cardComponent.setAlpha(1);
                     cardComponent.setX(cardPosition.x);
                     cardComponent.setY(cardPosition.y);
                     cardComponent.moveToTop();
                 }
-            },
-            calculatedX = function(cardIndex, boundingX) {
-                return cardIndex * 15 + 5 + boundingX;
-            },
-            calculatedY = function(cardIndex, boundingY) {
-                return 5 + boundingY;
-            },
-            calculatedWidth = function(cardCount) {
-                return 82 + ((cardCount - 1) * 15);
-            },
-            calculatedAlpha = function(cardCount) {
-                return (cards.length > 1 ? 1 : 1);
             },
             removeCard = function(cardComponent){
                 var ix = cards.indexOf(cardComponent);

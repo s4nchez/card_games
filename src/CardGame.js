@@ -69,16 +69,24 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         return {
             top: y,
             left: x,
-            right: x + config.borderOffset * 2 + ((cards.length -1) * config.cardFaceWidth) + config.cardWidth,
-            bottom: y + + config.borderOffset * 2 + config.cardHeight
+            right: x + group.getWidth(),
+            bottom: y + group.getHeight()
         }
     };
+    group.getWidth = function(){
+        return config.borderOffset * 2 + ((cards.length -1) * config.cardFaceWidth) + config.cardWidth;
+    };
+    group.getHeight = function(){
+        return config.borderOffset * 2 + config.cardHeight;
+    }
     group.getCards = function(){
         var result = [];
         for(var i in cards){
             result.push({
                 x: x + config.borderOffset + (i * config.cardFaceWidth),
-                y: y + config.borderOffset
+                relativeX: config.borderOffset + (i * config.cardFaceWidth),
+                y: y + config.borderOffset,
+                relativeY: config.borderOffset
             })
         }
         return result;
