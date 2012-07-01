@@ -26,7 +26,6 @@ basic operations
 TODO
 
 Detect position of card dropped within group
-- drop into groups instead of cards (done)
 - notify collision while card is being moved over a group
 - pass card points during collision
-- move group redraw logic to GameUI + work out where card being dragged would fit in group
+- work out where card being dragged would fit in group
