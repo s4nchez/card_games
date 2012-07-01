@@ -61,18 +61,16 @@
 
             internalStage.add(layer);
 
-            ui.on("GroupCreated", function(groupId, x, y){
-                CardGame.Group(stage, ui, {
+            ui.on("GroupCreated", function(group, x, y){
+                CardGame.Group(stage, ui, group, {
                     x: x,
                     y: y,
-                    groupId: groupId,
+                    groupId: group.groupId,
                     cards: []
                 });
             });
 
             ui.on("GroupRemoved", function(groupId){
-
-
                 for(var i in components){
                     var component = components[i];
                     if(component.getModel().groupId && component.getModel().groupId === groupId){
@@ -96,7 +94,7 @@
             });
         };
 
-        CardGame.Group = function(stage, ui, options) {
+        CardGame.Group = function(stage, ui, groupUI, options) {
             var groupId = options.groupId,
             group = {},
             cards = [],
@@ -211,7 +209,7 @@
             group.onNoCollisionFound = function(){
             };
 
-            ui.on("CardAdded:"+options.groupId, function(cardId){
+            groupUI.on("CardAdded", function(cardId){
                 var card = CardGame.Card(stage, ui, {
                     cardId: cardId
                 });
@@ -219,7 +217,7 @@
                 redrawInternals();
             });
 
-            ui.on("CardRemoved:"+options.groupId, function(cardId){
+            groupUI.on("CardRemoved", function(cardId){
                 for(var i = 0; i < cards.length; i++){
                     if(cards[i].getModel().cardId === cardId){
                         removeCard(cards[i]);

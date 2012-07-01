@@ -59,6 +59,9 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
     var group = {}, cards = [],
         x = initialX,
         y = initialY;
+
+    _.extend(group, Backbone.Events);
+
     group.contains = function(card){
         return cards.indexOf(card) != -1;
     };
@@ -75,11 +78,13 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         y = newY;
     };
     group.addCard = function(cardId){
-        cards.push(cardId)
+        cards.push(cardId);
+        group.trigger("CardAdded", cardId);
     };
     group.removeCard = function(card){
         var index = cards.indexOf(card);
         cards.splice(index, 1);
+        group.trigger("CardRemoved", card);
     };
     group.size = function(){
         return cards.length;
@@ -95,24 +100,19 @@ CardGame.GameUI = function(){
 
     _.extend(game, Backbone.Events);
 
-    var addCard = function(id, group) {
-        game.trigger("CardAdded:" + group.groupId, id);
-        group.addCard(id);
-    };
-
     var addGroup = function(x, y) {
         groupCounter += 1;
         var groupId = "group_" + groupCounter;
         var group = CardGame.GroupComponent(groupId, x, y, {});
         groups.push(group);
-        game.trigger("GroupCreated", groupId, x, y);
+        game.trigger("GroupCreated", group, x, y);
         return group;
     };
 
     game.init = function(ids){
         var group = addGroup(10, 10);
         for(var i in ids){
-            addCard(ids[i], group);
+            group.addCard(ids[i]);
         }
     };
 
@@ -125,19 +125,18 @@ CardGame.GameUI = function(){
                 groupHasCardsLeft = groups[i].size() > 0;
             }
         }
-        game.trigger("CardRemoved:" + groupId, id);
         !groupHasCardsLeft && game.trigger("GroupRemoved", groupId);
     };
 
     game.droppedOut = function(id, x, y) {
         var group = addGroup(x, y);
-        addCard(id, group);
+        group.addCard(id);
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
         for(var i in groups) {
             if(groups[i].groupId === droppedOnId) {
-                addCard(draggedId, groups[i]);
+                groups[i].addCard(draggedId);
             }
         }
     };
