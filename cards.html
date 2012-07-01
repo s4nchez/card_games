@@ -120,17 +120,15 @@
                 var i = 0, pos = border.getAbsolutePosition();
                 border.setWidth(calculatedWidth(cards.length));
                 mirror.clear();
-                for(i =0;i < cards.length;i++){
-                    //because mirror adds card to group component, x/y are relative
+                var uiCards = groupUI.getCards();
+                for (i in uiCards) {
+                    var cardPosition = uiCards[i];
                     mirror.addCard(cards[i].getModel().cardId, calculatedX(i, border.getX()), calculatedY(i, border.getY()));
-                }
-                for (i = 0; i < cards.length; i++) {
-                    //because cards are outside group component, x/y are absolute
-                    var card = cards[i].getComponent();
-                    card.setAlpha(1);
-                    card.setX(calculatedX(i, pos.x));
-                    card.setY(calculatedY(i, pos.y));
-                    card.moveToTop();
+                    var cardComponent = cards[i].getComponent();
+                    cardComponent.setAlpha(1);
+                    cardComponent.setX(cardPosition.x);
+                    cardComponent.setY(cardPosition.y);
+                    cardComponent.moveToTop();
                 }
             },
             calculatedX = function(cardIndex, boundingX) {
@@ -241,8 +239,11 @@
 
             (function(){
                 groupComponent.on("dragstart", hideCardComponents);
-
-                groupComponent.on("dragend", redrawInternals);
+                groupComponent.on("dragend", function(){
+                    var pos = border.getAbsolutePosition();
+                    groupUI.moveTo(pos.x, pos.y);
+                    redrawInternals();
+                });
             })();
 
             stage.add(group);

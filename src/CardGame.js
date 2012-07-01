@@ -73,6 +73,16 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
             bottom: y + + config.borderOffset * 2 + config.cardHeight
         }
     };
+    group.getCards = function(){
+        var result = [];
+        for(var i in cards){
+            result.push({
+                x: x + config.borderOffset + (i * config.cardFaceWidth),
+                y: y + config.borderOffset
+            })
+        }
+        return result;
+    };
     group.moveTo = function(newX, newY){
         x = newX;
         y = newY;
@@ -103,7 +113,12 @@ CardGame.GameUI = function(){
     var addGroup = function(x, y) {
         groupCounter += 1;
         var groupId = "group_" + groupCounter;
-        var group = CardGame.GroupComponent(groupId, x, y, {});
+        var group = CardGame.GroupComponent(groupId, x, y, {
+            borderOffset:5,
+            cardHeight:96,
+            cardWidth:72,
+            cardFaceWidth: 15
+        });
         groups.push(group);
         game.trigger("GroupCreated", group, x, y);
         return group;
