@@ -11,7 +11,8 @@ describe("Game UI", function () {
             borderOffset:5,
             cardHeight:96,
             cardWidth:72,
-            cardFaceWidth: 15
+            cardFaceWidth: 15,
+            cardFaceHeight: 30
         });
         expect(stageListener).toHaveBeenCalledWith(group0, 10, 10);
     });
