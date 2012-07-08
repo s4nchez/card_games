@@ -212,6 +212,11 @@
                 redrawInternals();
             })
 
+            groupComponent.on("click", function(){
+                ui.selectGroup(groupId);
+                stage.draw();
+            });
+
             group.getPoints = function(){
                 var pos = border.getAbsolutePosition();
                 return {
