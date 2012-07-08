@@ -3,9 +3,9 @@ basic operations
 * create group of cards
     - private group: "owner" sees one side of the cards, others see the other side
     - group types:
-        * stack
-        * normal (side-by-side)
-        * overlapped
+          * stack
+          * normal (side-by-side)
+          * overlapped
 * flipping card(s)
 * add card(s) to group
 * move group position
@@ -24,8 +24,3 @@ basic operations
 
 --
 TODO
-
-Detect position of card dropped within group
-- notify collision while card is being moved over a group
-- pass card points during collision
-- work out where card being dragged would fit in group

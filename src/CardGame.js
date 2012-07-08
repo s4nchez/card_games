@@ -56,7 +56,7 @@ CardGame.CollisionDetection = function(){
 };
 
 CardGame.GroupComponent = function(groupId, initialX, initialY, config){
-    var group = {}, cards = [],
+    var group = {}, cards = [], groupType = CardGame.GroupOverlapped(),
         x = initialX,
         y = initialY;
 
@@ -65,29 +65,21 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
     group.contains = function(card){
         return cards.indexOf(card) != -1;
     };
-    group.getPoints = function(){
-        return {
-            top: y,
-            left: x,
-            right: x + group.getWidth(),
-            bottom: y + group.getHeight()
-        }
-    };
     group.getWidth = function(){
-        return config.borderOffset * 2 + ((cards.length -1) * config.cardFaceWidth) + config.cardWidth;
+        return config.borderOffset * 2 + groupType.getWidth(cards.length, config);
     };
     group.getHeight = function(){
-        return config.borderOffset * 2 + config.cardHeight;
+        return config.borderOffset * 2 + groupType.getHeight(cards.length, config);
     }
     group.getCards = function(){
         var result = [];
         for(var i in cards){
             result.push({
                 cardId: cards[i],
-                x: x + config.borderOffset + (i * config.cardFaceWidth),
-                relativeX: config.borderOffset + (i * config.cardFaceWidth),
-                y: y + config.borderOffset,
-                relativeY: config.borderOffset
+                x: x + config.borderOffset + groupType.getCardX(i, config),
+                relativeX: config.borderOffset + groupType.getCardX(i, config),
+                y: y + config.borderOffset + groupType.getCardY(i, config),
+                relativeY: config.borderOffset + groupType.getCardY(i, config)
             })
         }
         return result;
@@ -113,6 +105,28 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         return cards.length;
     };
     group.groupId = groupId;
+    return group;
+};
+
+CardGame.GroupOverlapped = function() {
+    var group = {};
+
+    group.getWidth = function(numberOfCards, config) {
+        return ((numberOfCards -1) * config.cardFaceWidth) + config.cardWidth;
+    };
+
+    group.getHeight = function(numberOfCards, config) {
+        return config.cardHeight;
+    };
+
+    group.getCardX = function(i, config) {
+        return i * config.cardFaceWidth;
+    };
+
+    group.getCardY = function(i, config) {
+        return 0;
+    };
+
     return group;
 };
 
