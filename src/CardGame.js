@@ -224,7 +224,7 @@ CardGame.GameUI = function(){
         groupCounter += 1;
         var groupId = "group_" + groupCounter;
         var group = CardGame.GroupComponent(groupId, x, y, {
-            borderOffset:5,
+            borderOffset:20,
             cardHeight:96,
             cardWidth:72,
             cardFaceWidth: 15,
