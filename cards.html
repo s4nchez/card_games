@@ -200,6 +200,16 @@
                 redrawInternals();
             });
 
+            groupUI.on("GroupSelected", function(){
+                console.log("selected "+groupId);
+                border.setStroke("#00FF00");
+            });
+
+            groupUI.on("GroupUnselected", function(){
+                console.log("unselected "+groupId);
+                border.setStroke("#CCCCCC");
+            });
+
             group.getPoints = function(){
                 var pos = border.getAbsolutePosition();
                 return {

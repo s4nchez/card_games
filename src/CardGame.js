@@ -118,6 +118,12 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         groupStyle = availableTypes[groupStyleName];
         group.trigger("StyleChanged");
     };
+    group.selected = function(){
+        group.trigger("GroupSelected");
+    };
+    group.unselected = function(){
+        group.trigger("GroupUnselected");
+    };
     return group;
 };
 
@@ -209,7 +215,8 @@ CardGame.GroupStack = function() {
 CardGame.GameUI = function(){
     var game = {},
         groups = [],
-        groupCounter = -1;
+        groupCounter = -1,
+        selectedGroup;
 
     _.extend(game, Backbone.Events);
 
@@ -225,6 +232,7 @@ CardGame.GameUI = function(){
         });
         groups.push(group);
         game.trigger("GroupCreated", group, x, y);
+        game.selectGroup(groupId);
         return group;
     };
 
@@ -234,6 +242,19 @@ CardGame.GameUI = function(){
             group.addCard(ids[i]);
         }
     };
+
+    game.selectGroup = function(groupId){
+        if(selectedGroup){
+            selectedGroup.unselected();
+        }
+        for(var i in groups){
+            if(groups[i].groupId === groupId){
+                groups[i].selected();
+                selectedGroup = groups[i];
+                break;
+            }
+        }
+    }
 
     game.startMoving = function(id) {
         var groupId, groupHasCardsLeft = false;
@@ -256,6 +277,7 @@ CardGame.GameUI = function(){
         for(var i in groups) {
             if(groups[i].groupId === droppedOnId) {
                 groups[i].addCard(draggedId);
+                game.selectGroup(groups[i].groupId);
             }
         }
     };
@@ -264,6 +286,7 @@ CardGame.GameUI = function(){
         for(var i in groups) {
             if(groups[i].contains(droppedOnCardId)) {
                 groups[i].addCard(draggedCardId, droppedOnCardId);
+                game.selectGroup(groups[i].groupId);
             }
         }
     };
