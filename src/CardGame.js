@@ -291,5 +291,9 @@ CardGame.GameUI = function(){
         }
     };
 
+    game.changeStyleOfSelectGroup = function(styleName){
+        selectedGroup.groupStyle(styleName);
+    }
+
     return game;
 };

@@ -201,14 +201,16 @@
             });
 
             groupUI.on("GroupSelected", function(){
-                console.log("selected "+groupId);
                 border.setStroke("#00FF00");
             });
 
             groupUI.on("GroupUnselected", function(){
-                console.log("unselected "+groupId);
                 border.setStroke("#CCCCCC");
             });
+
+            groupUI.on("StyleChanged", function(){
+                redrawInternals();
+            })
 
             group.getPoints = function(){
                 var pos = border.getAbsolutePosition();
@@ -311,11 +313,33 @@
             });
 
             ui.init([7, 17, 27, 30, 40, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+            document.getElementById("style_stack").onclick = function(){
+                ui.changeStyleOfSelectGroup("stack");
+            }
+            document.getElementById("style_sbsh").onclick = function(){
+                ui.changeStyleOfSelectGroup("side_by_side_horizontal");
+            }
+            document.getElementById("style_sbsv").onclick = function(){
+                ui.changeStyleOfSelectGroup("side_by_side_vertical");
+            }
+            document.getElementById("style_oh").onclick = function(){
+                ui.changeStyleOfSelectGroup("overlapped_horizontal");
+            }
+            document.getElementById("style_ov").onclick = function(){
+                ui.changeStyleOfSelectGroup("overlapped_vertical");
+            }
         };
 
     </script>
 </head>
 <body>
 <div id="container"></div>
+<input id="style_stack" type="button" value="stack"/>
+<input id="style_sbsh" type="button" value="side by side horizontal"/>
+<input id="style_sbsv" type="button" value="side by side vertical"/>
+<input id="style_oh" type="button" value="overlapping horizontal"/>
+<input id="style_ov" type="button" value="overlapping vertical"/>
+
 </body>
 </html>
