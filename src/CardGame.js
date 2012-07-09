@@ -58,16 +58,22 @@ CardGame.CollisionDetection = function(){
 CardGame.GroupComponent = function(groupId, initialX, initialY, config){
     var group = {},
         cards = [],
-        groupStyle = CardGame.GroupStack(),
         availableTypes = {
-            "side_by_side_horizontal": CardGame.GroupSideBySideHorizontal(),
-            "side_by_side_vertical": CardGame.GroupSideBySideVertical(),
-            "overlapped_horizontal": CardGame.GroupOverlappedHorizontal(),
-            "overlapped_vertical": CardGame.GroupOverlappedVertical(),
-            "stack": CardGame.GroupStack(),
+            "side_by_side_horizontal":{deltaX:config.cardWidth, deltaY:0},
+            "side_by_side_vertical":{deltaX:0, deltaY:config.cardHeight},
+            "overlapped_horizontal":{deltaX:config.cardFaceWidth, deltaY:0},
+            "overlapped_vertical":{deltaX:0, deltaY:config.cardFaceHeight},
+            "stack":{deltaX:1, deltaY:1}
         },
+        groupStyle = availableTypes["stack"],
         x = initialX,
-        y = initialY;
+        y = initialY,
+        calculateCardX = function(cardIndex){
+            return cardIndex * groupStyle.deltaX;
+        },
+        calculateCardY = function(cardIndex){
+            return cardIndex * groupStyle.deltaY;
+        };
 
     _.extend(group, Backbone.Events);
 
@@ -75,20 +81,20 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         return cards.indexOf(card) != -1;
     };
     group.getWidth = function(){
-        return config.borderOffset * 2 + groupStyle.getWidth(cards.length, config);
+        return config.borderOffset * 2 + config.cardWidth + calculateCardX(cards.length - 1);
     };
     group.getHeight = function(){
-        return config.borderOffset * 2 + groupStyle.getHeight(cards.length, config);
-    }
+        return config.borderOffset * 2 + config.cardHeight + calculateCardY(cards.length - 1);
+    };
     group.getCards = function(){
         var result = [];
         for(var i in cards){
             result.push({
                 cardId: cards[i],
-                x: x + config.borderOffset + groupStyle.getCardX(i, config),
-                relativeX: config.borderOffset + groupStyle.getCardX(i, config),
-                y: y + config.borderOffset + groupStyle.getCardY(i, config),
-                relativeY: config.borderOffset + groupStyle.getCardY(i, config)
+                x: x + config.borderOffset + calculateCardX(i),
+                relativeX: config.borderOffset + calculateCardX(i),
+                y: y + config.borderOffset + calculateCardY(i),
+                relativeY: config.borderOffset + calculateCardY(i)
             })
         }
         return result;
@@ -125,91 +131,6 @@ CardGame.GroupComponent = function(groupId, initialX, initialY, config){
         group.trigger("GroupUnselected");
     };
     return group;
-};
-
-CardGame.GroupOverlappedHorizontal = function() {
-    return {
-        getWidth: function(numberOfCards, config) {
-            return ((numberOfCards -1) * config.cardFaceWidth) + config.cardWidth;
-        },
-        getHeight: function(numberOfCards, config) {
-            return config.cardHeight;
-        },
-        getCardX: function(i, config) {
-            return i * config.cardFaceWidth;
-        },
-        getCardY: function(i, config) {
-            return 0;
-        }
-   };
-};
-
-CardGame.GroupOverlappedVertical = function() {
-    return {
-        getWidth: function(numberOfCards, config) {
-            return config.cardWidth;
-        },
-        getHeight: function(numberOfCards, config) {
-            return ((numberOfCards -1) * config.cardFaceHeight) + config.cardHeight;
-        },
-        getCardX: function(i, config) {
-            return 0;
-        },
-        getCardY: function(i, config) {
-            return i * config.cardFaceHeight;
-        }
-    }
-};
-
-CardGame.GroupSideBySideHorizontal = function() {
-    return {
-        getWidth: function(numberOfCards, config) {
-            return numberOfCards * config.cardWidth;
-        },
-        getHeight: function(numberOfCards, config) {
-            return config.cardHeight;
-        },
-        getCardX: function(i, config) {
-            return i * config.cardWidth;
-        },
-        getCardY: function(i, config) {
-            return 0;
-        }
-    }
-};
-
-CardGame.GroupSideBySideVertical = function() {
-    return {
-        getWidth: function(numberOfCards, config) {
-            return config.cardWidth;
-        },
-        getHeight: function(numberOfCards, config) {
-            return numberOfCards * config.cardHeight;
-        },
-        getCardX: function(i, config) {
-            return 0;
-        },
-        getCardY: function(i, config) {
-            return i * config.cardHeight;
-        }
-    }
-};
-
-CardGame.GroupStack = function() {
-    return {
-        getWidth: function(numberOfCards, config) {
-            return numberOfCards + config.cardWidth;
-        },
-        getHeight: function(numberOfCards, config) {
-            return numberOfCards + config.cardHeight;
-        },
-        getCardX: function(i, config) {
-            return i * 1;
-        },
-        getCardY: function(i, config) {
-            return i * 1;
-        }
-    }
 };
 
 CardGame.GameUI = function(){
