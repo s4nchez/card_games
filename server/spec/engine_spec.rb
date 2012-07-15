@@ -31,4 +31,7 @@ describe 'Engine' do
     @engine.process_command("p1", "move_group")
   end
 
+  # it "move card"
+  # it "group style change"
+
 end

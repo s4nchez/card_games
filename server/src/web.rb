@@ -5,6 +5,8 @@ require 'json'
 require_relative 'engine'
 require_relative 'messaging'
 
+set :public_folder, '../client'
+
 enable :sessions
 set :logging, true
 
@@ -13,6 +15,11 @@ engine = CardGames::Engine.new(messaging)
 
 def player_session
   session[:player] = (0...8).map{65.+(rand(25)).chr}.join unless session.has_key? :player
+  session[:player]
+end
+
+get '/' do
+  redirect '/index.html'
 end
 
 get '/command/:command' do
@@ -24,4 +31,8 @@ end
 
 get '/query/' do
   JSON(messaging.query(player_session))
+end
+
+get '/current-state' do
+  JSON([1,2,3,4,5,6,7,8,9,10])
 end

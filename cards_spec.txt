@@ -28,3 +28,35 @@
 
 --
 TODO
+
+
+---
+API
+
+Current state
+  * sent by client on load
+
+  only player who sent the command receives a representation of the game
+
+Transfer card between groups
+  * sent by client when card is dropped
+
+  parameters:
+  - player
+  - source group
+  - target group (optional - creates new group)
+  - target index
+  - card id
+  - card position (if new group?)
+
+  validations:
+  - fails if card id is in source group
+  - fails if target group doesn't exist
+  - handles index > number of of cards on target group
+
+  all players receive a representation of the command
+
+Group style change
+Reposition group
+Shuffle group
+

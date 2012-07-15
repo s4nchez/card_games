@@ -16,7 +16,8 @@ module CardGames
     def query(target)
       messages = messages_for(target).clone
       messages_for(target).clear
-      messages
+      { :target => target,
+        :messages => messages }
     end
   end
 end

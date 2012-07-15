@@ -13,6 +13,7 @@
     <script type="text/javascript" src="lib/underscore-min.js"></script>
     <script type="text/javascript" src="lib/backbone-min.js"></script>
     <script type="text/javascript" src="lib/kinetic-v3.10.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.min.js"></script>
     <script type="text/javascript" src="src/CardGame.js"></script>
     <script>
 
@@ -316,7 +317,7 @@
                 height: 600
             });
 
-            ui.init([7, 17, 27, 30, 40, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+            jQuery.getJSON("/current-state", ui.init);
 
             document.getElementById("style_stack").onclick = function(){
                 ui.changeStyleOfSelectGroup("stack");
