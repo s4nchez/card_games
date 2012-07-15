@@ -6,9 +6,9 @@ describe("Game UI", function () {
         var game = CardGame.GameUI(),
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
-        game.init([1, 2, 3]);
+        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
         expect(CardGame.GroupComponent).toHaveBeenCalledWith("group_0", 10, 10, {
-            borderOffset:5,
+            borderOffset:20,
             cardHeight:96,
             cardWidth:72,
             cardFaceWidth: 15,
@@ -24,7 +24,7 @@ describe("Game UI", function () {
         var game = CardGame.GameUI(),
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
-        game.init([1, 2, 3]);
+        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
         game.startMoving(2);
         CardGame.GroupComponent.andReturn(group1);
         game.droppedOut(2, 20, 20);
@@ -38,7 +38,7 @@ describe("Game UI", function () {
             group0Listener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
         game.on("GroupRemoved", group0Listener);
-        game.init([1]);
+        game.init([{ cards: [1], style: "stack", x: 10, y: 10 }]);
         game.startMoving(1);
         expect(group0Listener).toHaveBeenCalledWith("group_0");
     });
@@ -48,7 +48,7 @@ describe("Game UI", function () {
         spyOn(CardGame, "GroupComponent").andReturn(group0);
         group0.addCard = jasmine.createSpy();
         var game = CardGame.GameUI();
-        game.init([1, 2, 3]);
+        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
         game.startMoving(2);
         game.receiveCard(2, "group_0");
         expect(group0.addCard).toHaveBeenCalledWith(2);
@@ -58,7 +58,7 @@ describe("Game UI", function () {
         var group0 = CardGame.GroupComponent("group_0", 10, 10, {});
         spyOn(CardGame, "GroupComponent").andReturn(group0);
         var game = CardGame.GameUI();
-        game.init([1, 2, 3]);
+        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
         game.startMoving(3);
         group0.addCard = jasmine.createSpy();
         game.cardReceivedCard(3, 1);

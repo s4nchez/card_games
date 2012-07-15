@@ -157,10 +157,15 @@ CardGame.GameUI = function(){
         return group;
     };
 
-    game.init = function(ids){
-        var group = addGroup(10, 10);
-        for(var i in ids){
-            group.addCard(ids[i]);
+    game.init = function(groups){
+        for(var i = 0; i < groups.length; i++) {
+            var grp = groups[i];
+            var group = addGroup(grp["x"], grp["y"]);
+            group.groupStyle(grp["style"]);
+
+            for(var j = 0; j < grp["cards"].length; j++){
+                group.addCard(grp["cards"][j]);
+            }
         }
     };
 

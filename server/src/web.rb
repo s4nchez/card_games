@@ -34,5 +34,18 @@ get '/query/' do
 end
 
 get '/current-state' do
-  JSON([1,2,3,4,5,6,7,8,9,10])
+  JSON([
+    {
+      :cards => [1,2,3,4,5,6,7,8,9,10],
+      :style => "stack",
+      :x => 10,
+      :y => 10
+    },
+    {
+      :cards => [11,12,13,14,15],
+      :style => "side_by_side_horizontal",
+      :x => 140,
+      :y => 140
+    }
+  ])
 end
