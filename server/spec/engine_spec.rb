@@ -6,7 +6,8 @@ describe 'Engine' do
 
   before do
     @messaging = mock('messaging')
-    @engine = CardGames::Engine.new(@messaging)
+    @state = mock('state')
+    @engine = CardGames::Engine.new(@messaging, @state)
   end
 
   it "should handle moving groups" do

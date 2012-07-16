@@ -1,7 +1,8 @@
 module CardGames
   class Engine
-    def initialize(messaging)
+    def initialize(messaging, state)
       @messaging = messaging
+      @state = state
     end
 
     def process_command(player, command, *details)
@@ -14,12 +15,14 @@ module CardGames
 
     def handle_move(player, details)
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 3
+      group_id, x, y = details
+      @state.reposition(group_id, x, y)
       @messaging.send(player, {
           :message_type => "group_moved",
           :details => {
-              :group_id => details[0],
-              :x => details[1],
-              :y => details[2]
+              :group_id => group_id,
+              :x => x,
+              :y => y
           }
       })
     end

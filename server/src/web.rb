@@ -3,6 +3,7 @@ require 'sinatra/config_file'
 require 'json'
 
 require_relative 'engine'
+require_relative 'game_state'
 require_relative 'messaging'
 
 set :public_folder, '../client'
@@ -11,7 +12,8 @@ enable :sessions
 set :logging, true
 
 messaging = CardGames::Messaging.new
-engine = CardGames::Engine.new(messaging)
+state = CardGames::GameState.new
+engine = CardGames::Engine.new(messaging, state)
 
 def player_session
   session[:player] = (0...8).map{65.+(rand(25)).chr}.join unless session.has_key? :player
@@ -34,20 +36,5 @@ get '/query/' do
 end
 
 get '/current-state' do
-  JSON([
-    {
-      :group_id => "g1",
-      :cards => [1,2,3,4,5,6,7,8,9,10],
-      :style => "stack",
-      :x => 10,
-      :y => 10
-    },
-    {
-      :group_id => "g2",
-      :cards => [11,12,13,14,15],
-      :style => "side_by_side_horizontal",
-      :x => 140,
-      :y => 140
-    }
-  ])
+  JSON(state.groups)
 end

@@ -181,7 +181,7 @@ CardGame.GameUI = function(){
                 break;
             }
         }
-    }
+    };
 
     game.startMoving = function(id) {
         var groupId, groupHasCardsLeft = false;
@@ -220,7 +220,7 @@ CardGame.GameUI = function(){
 
     game.changeStyleOfSelectGroup = function(styleName){
         selectedGroup.groupStyle(styleName);
-    }
+    };
 
     return game;
 };
