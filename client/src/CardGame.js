@@ -9,14 +9,12 @@ CardGame.CollisionDetection = function(){
                 currentCollision.onCollisionStop(gameComponent.getModel());
             }
             currentCollision = currentComponent;
-//                    console.log('collision started with '+JSON.stringify(currentCollision.getModel()));
             currentCollision.onCollisionStart(gameComponent.getModel());
         }
     };
 
     handleNonCollision = function(gameComponent, currentComponent){
         if (currentCollision && currentCollision == currentComponent) {
-//                    console.log('collision stopped with '+JSON.stringify(currentCollision.getModel()));
             currentCollision.onCollisionStop(gameComponent.getModel());
             currentCollision = null;
         }
@@ -141,9 +139,12 @@ CardGame.GameUI = function(){
 
     _.extend(game, Backbone.Events);
 
-    var addGroup = function(x, y) {
-        groupCounter += 1;
-        var groupId = "group_" + groupCounter;
+    var addGroup = function(x, y, optionalGroupId) {
+        var groupId = optionalGroupId;
+        if(!groupId){
+            groupCounter += 1;
+            groupId = "group_" + groupCounter;
+        }
         var group = CardGame.GroupComponent(groupId, x, y, {
             borderOffset:20,
             cardHeight:96,
@@ -160,7 +161,7 @@ CardGame.GameUI = function(){
     game.init = function(groups){
         for(var i = 0; i < groups.length; i++) {
             var grp = groups[i];
-            var group = addGroup(grp["x"], grp["y"]);
+            var group = addGroup(grp["x"], grp["y"], grp["group_id"]);
             group.groupStyle(grp["style"]);
 
             for(var j = 0; j < grp["cards"].length; j++){

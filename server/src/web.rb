@@ -36,12 +36,14 @@ end
 get '/current-state' do
   JSON([
     {
+      :group_id => "g1",
       :cards => [1,2,3,4,5,6,7,8,9,10],
       :style => "stack",
       :x => 10,
       :y => 10
     },
     {
+      :group_id => "g2",
       :cards => [11,12,13,14,15],
       :style => "side_by_side_horizontal",
       :x => 140,
