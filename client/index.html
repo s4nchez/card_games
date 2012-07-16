@@ -18,15 +18,13 @@
     <script>
 
         jQuery(function(){
-            var game = CardGame.Game();
+            var game = CardGame.Game(CardGame.PollingTransport());
 
             CardGame.Stage(game, {
                 container: "container",
                 width: 800,
                 height: 600
             });
-
-            jQuery.getJSON("/current-state", game.init);
 
             jQuery(".groupStyleChanger").click(function(){
                 game.changeStyleOfSelectGroup(jQuery(this).attr('data-group-style'));

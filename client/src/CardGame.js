@@ -131,7 +131,7 @@ CardGame.Group = function(groupId, initialX, initialY, config){
     return group;
 };
 
-CardGame.Game = function(){
+CardGame.Game = function(transport){
     var game = {},
         groups = [],
         groupCounter = -1,
@@ -158,7 +158,7 @@ CardGame.Game = function(){
         return group;
     };
 
-    game.init = function(groups){
+    transport.on("InitialState", function(groups){
         for(var i = 0; i < groups.length; i++) {
             var grp = groups[i];
             var group = addGroup(grp["x"], grp["y"], grp["group_id"]);
@@ -168,7 +168,7 @@ CardGame.Game = function(){
                 group.addCard(grp["cards"][j]);
             }
         }
-    };
+    });
 
     game.selectGroup = function(groupId){
         if(selectedGroup){
@@ -511,4 +511,26 @@ CardGame.CardWidget = function(stage, ui, options){
     stage.add(card);
 
     return card;
+};
+
+CardGame.PollingTransport = function(){
+    var transport = {},
+        handleNextMessages = function(messageWrapper){
+            var messages = messageWrapper.messages;
+            for(var index in messages){
+                console.log('PollingTransport: received '+JSON.stringify(messages[index]));
+            }
+        };
+
+    _.extend(transport, Backbone.Events);
+
+    jQuery.getJSON("/current-state", function(groups){
+        transport.trigger("InitialState", groups);
+    });
+
+    setInterval(function(){
+        jQuery.getJSON("/query", handleNextMessages);
+    },1000);
+
+    return transport;
 };

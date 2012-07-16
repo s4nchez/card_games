@@ -31,7 +31,7 @@ get '/command/:command' do
   JSON({:result => 'ok'})
 end
 
-get '/query/' do
+get '/query' do
   JSON(messaging.query(player_session))
 end
 
