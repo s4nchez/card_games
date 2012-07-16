@@ -2,7 +2,7 @@ describe("Group Component", function () {
     var group;
 
     beforeEach(function () {
-        group = new CardGame.GroupComponent("some_id", 3, 7, {
+        group = new CardGame.Group("some_id", 3, 7, {
             borderOffset:1,
             cardHeight:11,
             cardWidth:13,
