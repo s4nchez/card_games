@@ -1,12 +1,18 @@
 describe("Game UI", function () {
 
+    var transport = {};
+
+    beforeEach(function(){
+        _.extend(transport, Backbone.Events);
+    });
+
     it("should start with some cards", function () {
         var group0 = CardGame.Group("group_0", 10, 10, {});
         spyOn(CardGame, "Group").andReturn(group0);
-        var game = CardGame.Game(),
+        var game = CardGame.Game(transport),
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
-        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
+        transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         expect(CardGame.Group).toHaveBeenCalledWith("group_0", 10, 10, {
             borderOffset:20,
             cardHeight:96,
@@ -21,10 +27,10 @@ describe("Game UI", function () {
         var group0 = CardGame.Group("group_0", 10, 10, {});
         var group1 = CardGame.Group("group_1", 20, 20, {});
         spyOn(CardGame, "Group").andReturn(group0);
-        var game = CardGame.Game(),
+        var game = CardGame.Game(transport),
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
-        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
+        transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving(2);
         CardGame.Group.andReturn(group1);
         game.droppedOut(2, 20, 20);
@@ -33,12 +39,12 @@ describe("Game UI", function () {
     });
 
     it("should remove group if becomes empty", function(){
-        var game = CardGame.Game(),
+        var game = CardGame.Game(transport),
             stageListener = jasmine.createSpy(),
             group0Listener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
         game.on("GroupRemoved", group0Listener);
-        game.init([{ cards: [1], style: "stack", x: 10, y: 10 }]);
+        transport.trigger("InitialState", [{ cards: [1], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving(1);
         expect(group0Listener).toHaveBeenCalledWith("group_0");
     });
@@ -47,8 +53,8 @@ describe("Game UI", function () {
         var group0 = CardGame.Group("group_0", 10, 10, {});
         spyOn(CardGame, "Group").andReturn(group0);
         group0.addCard = jasmine.createSpy();
-        var game = CardGame.Game();
-        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
+        var game = CardGame.Game(transport);
+        transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving(2);
         game.receiveCard(2, "group_0");
         expect(group0.addCard).toHaveBeenCalledWith(2);
@@ -57,11 +63,24 @@ describe("Game UI", function () {
     it("should add card on top of existing card in group", function(){
         var group0 = CardGame.Group("group_0", 10, 10, {});
         spyOn(CardGame, "Group").andReturn(group0);
-        var game = CardGame.Game();
-        game.init([{ cards: [1, 2, 3], style: "stack", x: 10, y: 10 }]);
+        var game = CardGame.Game(transport);
+        transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving(3);
         group0.addCard = jasmine.createSpy();
         game.cardReceivedCard(3, 1);
         expect(group0.addCard).toHaveBeenCalledWith(3, 1);
+    });
+
+    describe("Transport event handling", function(){
+       it("should reposition group", function(){
+           var game = CardGame.Game(transport),
+               group = CardGame.Group("g1", 10, 10, {}),
+               listener = jasmine.createSpy();
+           spyOn(CardGame, "Group").andReturn(group);
+           game.on("GroupRepositioned:g1", listener);
+           transport.trigger("InitialState", [{ cards: [1,2,3], group_id: "g1", style: "stack", x:10, y: 10}]);
+           transport.trigger("group_repositioned", {group_id: "g1", x: 15, y: 30});
+           expect(listener).toHaveBeenCalledWith();
+       })
     });
 });

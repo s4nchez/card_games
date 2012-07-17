@@ -6,7 +6,7 @@ module CardGames
     end
 
     def process_command(player, command, *details)
-      if command == "move_group"
+      if command == "reposition_group"
         handle_move(player, details)
         return
       end
@@ -18,7 +18,7 @@ module CardGames
       group_id, x, y = details
       @state.reposition(group_id, x, y)
       @messaging.send(player, {
-          :message_type => "group_moved",
+          :message_type => "group_repositioned",
           :details => {
               :group_id => group_id,
               :x => x,

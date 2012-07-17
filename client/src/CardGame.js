@@ -135,7 +135,15 @@ CardGame.Game = function(transport){
     var game = {},
         groups = [],
         groupCounter = -1,
-        selectedGroup;
+        selectedGroup,
+        findGroup = function(groupId){
+            for(var gIndex in groups){
+                if(groups[gIndex].groupId === groupId){
+                    return groups[gIndex];
+                }
+            }
+            console.error("Group not found: " + groupId);
+        };
 
     _.extend(game, Backbone.Events);
 
@@ -170,17 +178,18 @@ CardGame.Game = function(transport){
         }
     });
 
+    transport.on("group_repositioned", function(details){
+        findGroup(details.group_id).moveTo(details.x, details.y);
+        game.trigger("GroupRepositioned:"+details.group_id);
+    });
+
     game.selectGroup = function(groupId){
         if(selectedGroup){
             selectedGroup.unselected();
         }
-        for(var i in groups){
-            if(groups[i].groupId === groupId){
-                groups[i].selected();
-                selectedGroup = groups[i];
-                break;
-            }
-        }
+        var group = findGroup(groupId);
+        group.selected();
+        selectedGroup = group;
     };
 
     game.startMoving = function(id) {
@@ -201,12 +210,9 @@ CardGame.Game = function(transport){
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
-        for(var i in groups) {
-            if(groups[i].groupId === droppedOnId) {
-                groups[i].addCard(draggedId);
-                game.selectGroup(groups[i].groupId);
-            }
-        }
+        var group = findGroup(droppedOnId);
+        group.addCard(draggedId);
+        game.selectGroup(droppedOnId);
     };
 
     game.cardReceivedCard = function(draggedCardId, droppedOnCardId){
@@ -413,9 +419,8 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
         border.setStroke("#CCCCCC");
     });
 
-    groupUI.on("StyleChanged", function(){
-        redrawInternals();
-    })
+    groupUI.on("StyleChanged", redrawInternals);
+    ui.on("GroupRepositioned:" + groupId, redrawInternals);
 
     groupComponent.on("click", function(){
         ui.selectGroup(groupId);
