@@ -143,7 +143,15 @@ CardGame.Game = function(transport){
                 }
             }
             console.error("Group not found: " + groupId);
-        };
+        },
+        findGroupContainingCard = function(cardId){
+            for(var gIndex in groups){
+                if(groups[gIndex].contains(cardId)){
+                    return groups[gIndex];
+                }
+            }
+            console.error("Group not found for card "+cardId);
+        };;
 
     _.extend(game, Backbone.Events);
 
@@ -193,15 +201,9 @@ CardGame.Game = function(transport){
     };
 
     game.startMoving = function(id) {
-        var groupId, groupHasCardsLeft = false;
-        for(var i in groups) {
-            if(groups[i].contains(id)) {
-                groupId = groups[i].groupId;
-                groups[i].removeCard(id);
-                groupHasCardsLeft = groups[i].size() > 0;
-            }
-        }
-        !groupHasCardsLeft && game.trigger("GroupRemoved", groupId);
+        var group = findGroupContainingCard(id);
+        group.removeCard(id);
+        group.size() === 0 && game.trigger("GroupRemoved", group.groupId);
     };
 
     game.droppedOut = function(id, x, y) {
@@ -216,12 +218,9 @@ CardGame.Game = function(transport){
     };
 
     game.cardReceivedCard = function(draggedCardId, droppedOnCardId){
-        for(var i in groups) {
-            if(groups[i].contains(droppedOnCardId)) {
-                groups[i].addCard(draggedCardId, droppedOnCardId);
-                game.selectGroup(groups[i].groupId);
-            }
-        }
+        var group = findGroupContainingCard(droppedOnCardId);
+        group.addCard(draggedCardId, droppedOnCardId);
+        game.selectGroup(group.groupId);
     };
 
     game.changeStyleOfSelectGroup = function(styleName){
