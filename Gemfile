@@ -9,4 +9,6 @@ group :test do
   gem "resque_spec", "0.9.2"
   gem "webrat", "0.7.3"
   gem "foreman", "~> 0.46.0"
+  gem "jslint", "1.2.0"                  # https://github.com/geraud/jslint
+  gem "jasmine", "1.2.0"                 # https://github.com/pivotal/jasmine-gem
 end
