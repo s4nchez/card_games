@@ -1,6 +1,8 @@
 describe("Game UI", function () {
 
-    var transport = {};
+    var transport = {
+        createGroup: jasmine.createSpy()
+    };
 
     beforeEach(function(){
         _.extend(transport, Backbone.Events);
@@ -31,7 +33,7 @@ describe("Game UI", function () {
             stageListener = jasmine.createSpy();
         game.on("GroupCreated", stageListener);
         transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
-        game.startMoving(2);
+        game.startMoving({cardId:2});
         CardGame.Group.andReturn(group1);
         game.droppedOut(2, 20, 20);
         expect(stageListener).toHaveBeenCalledWith(group0, 10, 10);
@@ -45,7 +47,7 @@ describe("Game UI", function () {
         game.on("GroupCreated", stageListener);
         game.on("GroupRemoved", group0Listener);
         transport.trigger("InitialState", [{ cards: [1], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
-        game.startMoving(1);
+        game.startMoving({cardId:1});
         expect(group0Listener).toHaveBeenCalledWith("group_0");
     });
 
@@ -55,7 +57,7 @@ describe("Game UI", function () {
         spyOn(group0, "addCard").andCallThrough();
         var game = CardGame.Game(transport);
         transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
-        game.startMoving(2);
+        game.startMoving({cardId:2});
         game.receiveCard(2, "group_0");
         expect(group0.addCard).toHaveBeenCalledWith(2);
     });
@@ -65,7 +67,7 @@ describe("Game UI", function () {
         spyOn(CardGame, "Group").andReturn(group0);
         var game = CardGame.Game(transport);
         transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
-        game.startMoving(3);
+        game.startMoving({cardId:3});
         group0.addCard = jasmine.createSpy();
         game.cardReceivedCard(3, 1);
         expect(group0.addCard).toHaveBeenCalledWith(3, 1);
