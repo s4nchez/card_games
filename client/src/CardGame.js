@@ -86,7 +86,8 @@ CardGame.Group = function(groupId, initialX, initialY, config){
     };
     group.getCards = function(){
         var result = [];
-        for(var i in cards){
+        var len = cards.length
+        for(var i = 0; i < len; i++){
             result.push({
                 cardId: cards[i],
                 x: x + config.borderOffset + calculateCardX(i),
@@ -137,7 +138,8 @@ CardGame.Game = function(transport){
         groupCounter = -1,
         selectedGroup,
         findGroup = function(groupId){
-            for(var gIndex in groups){
+            var len = groups.length
+            for(var gIndex = 0; gIndex < len; gIndex++){
                 if(groups[gIndex].groupId === groupId){
                     return groups[gIndex];
                 }
@@ -145,7 +147,8 @@ CardGame.Game = function(transport){
             console.error("Group not found: " + groupId);
         },
         findGroupContainingCard = function(cardId){
-            for(var gIndex in groups){
+            var len = groups.length
+            for(var gIndex = 0; gIndex < len; gIndex++){
                 if(groups[gIndex].contains(cardId)){
                     return groups[gIndex];
                 }
@@ -200,15 +203,27 @@ CardGame.Game = function(transport){
         selectedGroup = group;
     };
 
-    game.startMoving = function(id) {
-        var group = findGroupContainingCard(id);
-        group.removeCard(id);
+    game.startMoving = function(card) {
+        var group = findGroupContainingCard(card.cardId);
+        group.removeCard(card.cardId);
+        card.moveStartGroupId = group.groupId
+
         group.size() === 0 && game.trigger("GroupRemoved", group.groupId);
     };
 
-    game.droppedOut = function(id, x, y) {
-        var group = addGroup(x, y);
-        group.addCard(id);
+    game.droppedOut = function(card, x, y) {
+        var cardId = card.cardId;
+        var newGroup = addGroup(x, y);
+        newGroup.addCard(cardId);
+
+        console.debug("Dropped <%s> at (%s, %s) from group <%s>", cardId, x, y, card.moveStartGroupId);
+
+        var oldGroupId = newGroup.groupId;
+        transport.createGroup(card.moveStartGroupId, newGroup, cardId, [x, y], function(newGroupId) {
+            // update ui widget and group model
+            game.trigger("GroupIdChanged", oldGroupId, newGroupId);
+            newGroup.groupId = newGroupId;
+        });
     };
 
     game.receiveCard = function(draggedId, droppedOnId) {
@@ -277,10 +292,23 @@ CardGame.Stage = function(ui, options){
     });
 
     ui.on("GroupRemoved", function(groupId){
-        for(var i in components){
+        var len = components.length
+        for(var i = 0; i < len; i++){
             var component = components[i];
             if(component.getModel().groupId && component.getModel().groupId === groupId){
                 remove(component);
+                break;
+            }
+        }
+    });
+
+    ui.on("GroupIdChanged", function(oldGroupId, newGroupId){
+        var len = components.length
+        for(var i = 0; i < len; i++){
+            var component = components[i];
+            if(component.getModel().groupId && component.getModel().groupId === oldGroupId){
+                component.groupId = newGroupId;
+                break;
             }
         }
     });
@@ -302,8 +330,7 @@ CardGame.CollisionableWidget = function(stage, component){
 };
 
 CardGame.GroupWidget = function(stage, ui, groupUI, options) {
-    var groupId = options.groupId,
-        group = {},
+    var group = {groupId: options.groupId},
         cards = {},
         offset = 5,
         groupComponent = new Kinetic.Group({
@@ -319,7 +346,8 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
         }),
         hideCardComponents = function(){
             //hide card components
-            for(var cardId in cards){
+            var len = cards.length
+            for(var cardId = 0; cardId < len; cardId++){
                 cards[cardId].getComponent().setAlpha(0);
             }
         },
@@ -328,7 +356,8 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
             border.setWidth(groupUI.getWidth());
             border.setHeight(groupUI.getHeight());
             mirror.clear();
-            for (i in uiCards) {
+            var len = uiCards.length
+            for(var i = 0; i < len; i++){
                 var cardPosition = uiCards[i];
                 mirror.addCard(cardPosition.cardId, cardPosition.relativeX, cardPosition.relativeY);
                 var cardComponent = cards[cardPosition.cardId].getComponent();
@@ -389,7 +418,7 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
 
     group.onCollisionAccepted = function(model){
         if(model.cardId){
-            ui.receiveCard(model.cardId, groupId);
+            ui.receiveCard(model.cardId, group.groupId);
             return true;
         }
         return false;
@@ -419,10 +448,10 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
     });
 
     groupUI.on("StyleChanged", redrawInternals);
-    ui.on("GroupRepositioned:" + groupId, redrawInternals);
+    ui.on("GroupRepositioned:" + group.groupId, redrawInternals);
 
     groupComponent.on("click", function(){
-        ui.selectGroup(groupId);
+        ui.selectGroup(group.groupId);
         stage.draw();
     });
 
@@ -437,7 +466,7 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
     };
 
     group.getModel = function(){
-        return { groupId: groupId };
+        return { groupId: group.groupId };
     };
 
     (function(){
@@ -465,6 +494,7 @@ CardGame.CardWidget = function(stage, ui, options){
             height: 96,
             draggable: true
         });
+    card.cardId = cardId;
 
     imageObj.onload = function() {
         image.setImage(imageObj);
@@ -474,7 +504,7 @@ CardGame.CardWidget = function(stage, ui, options){
     imageObj.src = "images/classic-cards/"+cardId+".png";
 
     image.on("dragstart", function(){
-        ui.startMoving(cardId);
+        ui.startMoving(card);
     });
 
     card.getComponent = function(){
@@ -506,7 +536,7 @@ CardGame.CardWidget = function(stage, ui, options){
     };
 
     card.onNoCollisionFound = function(){
-        ui.droppedOut(cardId, image.getX(), image.getY());
+        ui.droppedOut(card, image.getX(), image.getY());
         return true;
     };
 
@@ -521,7 +551,8 @@ CardGame.PollingTransport = function(){
     var transport = {},
         handleNextMessages = function(messageWrapper){
             var messages = messageWrapper.messages;
-            for(var index in messages){
+            var len = messages.length;
+            for(var index = 0; index < len; index++){
                 console.log('PollingTransport: received '+JSON.stringify(messages[index]));
             }
         };
@@ -535,6 +566,24 @@ CardGame.PollingTransport = function(){
     setInterval(function(){
         jQuery.getJSON("/query", handleNextMessages);
     },1000);
+
+    transport.createGroup = function(sourceGroupId, targetGroup, cardId, cardPosition, newGroupIdFunction) {
+        // how to set player?
+        console.debug("transport.createGroup(%s, %s, %s, %o)", sourceGroupId, targetGroup.groupId, cardId,
+            cardPosition);
+
+        var params = {
+            "sourceGroupId": sourceGroupId,
+            "cardId": cardId,
+            "cardPosition": cardPosition
+        }
+        jQuery.post("/command/group", params, function(data, textStatus) {
+            console.debug("createGroup received response <%o, %o>", data, textStatus);
+            if (newGroupIdFunction) {
+                newGroupIdFunction(data.newGroupId);
+            }
+        }, "json");
+    }
 
     return transport;
 };
