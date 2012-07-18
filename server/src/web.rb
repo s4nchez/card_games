@@ -31,10 +31,23 @@ get '/command/:command' do
   JSON({:result => 'ok'})
 end
 
+post '/command/group' do
+  logger.info { "/command/group received #{params}" }
+
+  source_group_id = params[:sourceGroupId]
+  card_id = params[:cardId].to_i
+  position = params[:cardPosition].map {|n| n.to_i}
+
+  new_group_id = engine.create_group(source_group_id, card_id, position)
+  JSON({:newGroupId => new_group_id})
+end
+
 get '/query' do
   JSON(messaging.query(player_session))
 end
 
 get '/current-state' do
-  JSON(state.groups)
+  current_state = state.groups.values
+  logger.info { "#{current_state}" }
+  JSON(current_state)
 end
