@@ -40,5 +40,4 @@ module CardGames
       })
     end
   end
-
 end
