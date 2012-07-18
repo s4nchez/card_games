@@ -27,6 +27,10 @@ module CardGames
       })
     end
 
+    def create_group(source_group, card_id, position)
+      return @state.create_group(source_group, [card_id], position)
+    end
+
     def invalid_command(player, error)
       @messaging.send(player, {
           :message_type => "invalid_command",
