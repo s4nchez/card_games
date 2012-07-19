@@ -17,7 +17,8 @@ module CardGames
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 3
       group_id, x, y = details[0], details[1].to_i, details[2].to_i
       @state.reposition(group_id, x, y)
-      @messaging.send(player, {
+
+      @messaging.send_multiple(@state.players, {
           :message_type => "group_repositioned",
           :details => {
               :group_id => group_id,

@@ -47,6 +47,7 @@ get '/query' do
 end
 
 get '/current-state' do
+  state.player_active(player_session);
   current_state = state.groups.values
   logger.info { "#{current_state}" }
   JSON(current_state)

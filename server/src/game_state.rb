@@ -2,10 +2,11 @@ module CardGames
   require 'logger'
 
   class GameState
-    attr_reader :groups
+    attr_reader :groups, :players
 
     def initialize
       @logger = Logger.new(STDOUT)
+      @players = []
       @groups = {
           "g1" => {
               :group_id => "g1",
@@ -61,6 +62,10 @@ module CardGames
           group[:x] = x
           group[:y] = y
       end
+    end
+
+    def player_active(player_session)
+      @players << player_session
     end
   end
 end

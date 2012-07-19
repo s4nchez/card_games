@@ -13,6 +13,10 @@ module CardGames
       messages_for(target) << message
     end
 
+    def send_multiple(targets, message)
+      targets.each { |target| send(target, message) }
+    end
+
     def query(target)
       messages = messages_for(target).clone
       messages_for(target).clear

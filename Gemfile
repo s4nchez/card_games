@@ -12,3 +12,7 @@ group :test do
   gem "jslint", "1.2.0"                  # https://github.com/geraud/jslint
   gem "jasmine", "1.2.0"                 # https://github.com/pivotal/jasmine-gem
 end
+
+group :development do
+  gem "rerun", "0.7.1"
+end
