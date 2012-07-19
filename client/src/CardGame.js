@@ -5,7 +5,7 @@ CardGame.CollisionDetection = function(){
 
     handleCollision = function(gameComponent, currentComponent){
         if (currentComponent !== currentCollision) {
-            if (currentCollision != null) {
+            if (currentCollision) {
                 currentCollision.onCollisionStop(gameComponent.getModel());
             }
             currentCollision = currentComponent;
@@ -14,29 +14,31 @@ CardGame.CollisionDetection = function(){
     };
 
     handleNonCollision = function(gameComponent, currentComponent){
-        if (currentCollision && currentCollision == currentComponent) {
+        if (currentCollision && currentCollision === currentComponent) {
             currentCollision.onCollisionStop(gameComponent.getModel());
             currentCollision = null;
         }
     };
 
     checkCollisionBetween = function(gameComponent, currentComponent) {
+        var c1, c2;
         if (currentComponent === gameComponent) {
             return false;
         }
-        var c1 = gameComponent.getPoints(), c2 = currentComponent.getPoints();
+        c1 = gameComponent.getPoints();
+        c2 = currentComponent.getPoints();
         if (c1.top >= c2.top && c1.top <= c2.bottom &&
             c1.left >= c2.left && c1.left <= c2.right) {
             handleCollision(gameComponent, currentComponent);
             return true;
-        } else {
-            handleNonCollision(gameComponent, currentComponent);
-            return false;
         }
+        handleNonCollision(gameComponent, currentComponent);
+        return false;
     };
 
     detector.detectCollision = function(gameComponent, components){
-        for(var i = 0; i < components.length; i++){
+        var i;
+        for(i = 0; i < components.length; i++){
             if(checkCollisionBetween(gameComponent, components[i])){
                 break;
             }
@@ -63,7 +65,7 @@ CardGame.Group = function(groupId, initialX, initialY, config){
             "overlapped_vertical":{deltaX:0, deltaY:config.cardFaceHeight},
             "stack":{deltaX:1, deltaY:1}
         },
-        groupStyle = availableTypes["stack"],
+        groupStyle = availableTypes.stack,
         x = initialX,
         y = initialY,
         calculateCardX = function(cardIndex){
@@ -76,7 +78,7 @@ CardGame.Group = function(groupId, initialX, initialY, config){
     _.extend(group, Backbone.Events);
 
     group.contains = function(card){
-        return cards.indexOf(card) != -1;
+        return cards.indexOf(card) !== -1;
     };
     group.getWidth = function(){
         return config.borderOffset * 2 + config.cardWidth + calculateCardX(cards.length - 1);
@@ -85,16 +87,16 @@ CardGame.Group = function(groupId, initialX, initialY, config){
         return config.borderOffset * 2 + config.cardHeight + calculateCardY(cards.length - 1);
     };
     group.getCards = function(){
-        var result = [];
-        var len = cards.length
-        for(var i = 0; i < len; i++){
+        var i, len = cards.length,
+            result = [];
+        for(i = 0; i < len; i++){
             result.push({
                 cardId: cards[i],
                 x: x + config.borderOffset + calculateCardX(i),
                 relativeX: config.borderOffset + calculateCardX(i),
                 y: y + config.borderOffset + calculateCardY(i),
                 relativeY: config.borderOffset + calculateCardY(i)
-            })
+            });
         }
         return result;
     };
@@ -140,8 +142,8 @@ CardGame.Game = function(transport){
         groupCounter = -1,
         selectedGroup,
         findGroup = function(groupId){
-            var len = groups.length
-            for(var gIndex = 0; gIndex < len; gIndex++){
+            var gIndex, len = groups.length;
+            for(gIndex = 0; gIndex < len; gIndex++){
                 if(groups[gIndex].groupId === groupId){
                     return groups[gIndex];
                 }
@@ -149,63 +151,63 @@ CardGame.Game = function(transport){
             console.error("Group not found: " + groupId);
         },
         findGroupContainingCard = function(cardId){
-            var len = groups.length
-            for(var gIndex = 0; gIndex < len; gIndex++){
+            var gIndex, len = groups.length;
+            for(gIndex = 0; gIndex < len; gIndex++){
                 if(groups[gIndex].contains(cardId)){
                     return groups[gIndex];
                 }
             }
             console.error("Group not found for card "+cardId);
-        };;
+        },
+        addGroup = function (x, y, optionalGroupId) {
+            var groupId = optionalGroupId, group;
+            if (!groupId) {
+                groupCounter += 1;
+                groupId = "group_" + groupCounter;
+            }
+            group = CardGame.Group(groupId, x, y, {
+                borderOffset:20,
+                cardHeight:96,
+                cardWidth:72,
+                cardFaceWidth:15,
+                cardFaceHeight:30
+            });
+            groups.push(group);
+            game.trigger("GroupCreated", group, x, y);
+            game.selectGroup(groupId);
+            return group;
+        };
 
     _.extend(game, Backbone.Events);
 
-    var addGroup = function(x, y, optionalGroupId) {
-        var groupId = optionalGroupId;
-        if(!groupId){
-            groupCounter += 1;
-            groupId = "group_" + groupCounter;
-        }
-        var group = CardGame.Group(groupId, x, y, {
-            borderOffset:20,
-            cardHeight:96,
-            cardWidth:72,
-            cardFaceWidth: 15,
-            cardFaceHeight: 30
-        });
-        groups.push(group);
-        game.trigger("GroupCreated", group, x, y);
-        game.selectGroup(groupId);
-        return group;
-    };
-
     transport.on("InitialState", function(groups){
-        for(var i = 0; i < groups.length; i++) {
-            var grp = groups[i];
-            var group = addGroup(grp["x"], grp["y"], grp["group_id"]);
-            group.groupStyle(grp["style"]);
+        var i, j, groupDetails, group;
+        for(i = 0; i < groups.length; i++) {
+            groupDetails = groups[i];
+            group = addGroup(groupDetails.x, groupDetails.y, groupDetails.group_id);
+            group.groupStyle(groupDetails.style);
 
-            for(var j = 0; j < grp["cards"].length; j++){
-                group.addCard(grp["cards"][j]);
+            for(j = 0; j < groupDetails.cards.length; j++){
+                group.addCard(groupDetails.cards[j]);
             }
         }
     });
 
     transport.on("group_repositioned", function(details){
         findGroup(details.group_id).moveTo(details.x, details.y);
-        game.trigger("GroupRepositioned:"+details.group_id);
+        game.trigger("GroupRepositioned:" + details.group_id);
     });
 
     game.groupMovedByWidget = function(groupId, newX, newY) {
         transport.sendCommand("reposition_group", [groupId, newX, newY]);
         findGroup(groupId).moveTo(newX, newY);
-    }
+    };
 
     game.selectGroup = function(groupId){
+        var group = findGroup(groupId);
         if(selectedGroup){
             selectedGroup.unselected();
         }
-        var group = findGroup(groupId);
         group.selected();
         selectedGroup = group;
     };
@@ -213,19 +215,21 @@ CardGame.Game = function(transport){
     game.startMoving = function(card) {
         var group = findGroupContainingCard(card.cardId);
         group.removeCard(card.cardId);
-        card.moveStartGroupId = group.groupId
-
-        group.size() === 0 && game.trigger("GroupRemoved", group.groupId);
+        card.moveStartGroupId = group.groupId;
+        if (group.size() === 0) {
+            game.trigger("GroupRemoved", group.groupId);
+        }
     };
 
     game.droppedOut = function(card, x, y) {
-        var cardId = card.cardId;
-        var newGroup = addGroup(x, y);
+        var cardId = card.cardId,
+            newGroup = addGroup(x, y),
+            oldGroupId = newGroup.groupId;
+
         newGroup.addCard(cardId);
 
         console.debug("Dropped <%s> at (%s, %s) from group <%s>", cardId, x, y, card.moveStartGroupId);
 
-        var oldGroupId = newGroup.groupId;
         transport.createGroup(card.moveStartGroupId, newGroup, cardId, [x, y], function(newGroupId) {
             // update ui widget and group model
             game.trigger("GroupIdChanged", oldGroupId, newGroupId);
@@ -299,9 +303,9 @@ CardGame.Stage = function(ui, options){
     });
 
     ui.on("GroupRemoved", function(groupId){
-        var len = components.length
-        for(var i = 0; i < len; i++){
-            var component = components[i];
+        var i, component, len = components.length;
+        for(i = 0; i < len; i++){
+            component = components[i];
             if(component.getModel().groupId && component.getModel().groupId === groupId){
                 remove(component);
                 break;
@@ -310,9 +314,9 @@ CardGame.Stage = function(ui, options){
     });
 
     ui.on("GroupIdChanged", function(oldGroupId, newGroupId){
-        var len = components.length
-        for(var i = 0; i < len; i++){
-            var component = components[i];
+        var i, component, len = components.length;
+        for(i = 0; i < len; i++){
+            component = components[i];
             if(component.getModel().groupId && component.getModel().groupId === oldGroupId){
                 component.groupId = newGroupId;
                 break;
@@ -352,24 +356,24 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
             strokeWidth: 2
         }),
         hideCardComponents = function(){
-            //hide card components
-            var len = cards.length
-            for(var cardId = 0; cardId < len; cardId++){
+            var cardId, len = cards.length;
+            for(cardId = 0; cardId < len; cardId++){
                 cards[cardId].getComponent().setAlpha(0);
             }
         },
         redrawInternals = function(){
-            var i = 0, uiCards = groupUI.getCards();
+            var i, uiCards = groupUI.getCards(),
+                len = uiCards.length,
+                cardPosition, cardComponent;
             groupComponent.setX(groupUI.getX());
             groupComponent.setY(groupUI.getY());
             border.setWidth(groupUI.getWidth());
             border.setHeight(groupUI.getHeight());
             mirror.clear();
-            var len = uiCards.length
-            for(var i = 0; i < len; i++){
-                var cardPosition = uiCards[i];
+            for(i = 0; i < len; i++){
+                cardPosition = uiCards[i];
                 mirror.addCard(cardPosition.cardId, cardPosition.relativeX, cardPosition.relativeY);
-                var cardComponent = cards[cardPosition.cardId].getComponent();
+                cardComponent = cards[cardPosition.cardId].getComponent();
                 cardComponent.setAlpha(1);
                 cardComponent.setX(cardPosition.x);
                 cardComponent.setY(cardPosition.y);
@@ -397,11 +401,12 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
                         stage.draw();
                     };
                     imageObj.src = "images/classic-cards/" + card + ".png";
-                })();
+                }());
             };
 
             mirror.clear = function(){
-                for(var i = 0; i < cardImages.length;i++){
+                var i;
+                for(i = 0; i < cardImages.length;i++){
                     groupComponent.remove(cardImages[i]);
                 }
                 cardImages = [];
@@ -485,7 +490,7 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
             ui.groupMovedByWidget(group.groupId, pos.x, pos.y);
             redrawInternals();
         });
-    })();
+    }());
 
     stage.add(group);
 
@@ -559,9 +564,9 @@ CardGame.CardWidget = function(stage, ui, options){
 CardGame.PollingTransport = function(){
     var transport = {},
         handleNextMessages = function(messageWrapper){
-            var messages = messageWrapper.messages;
-            var len = messages.length;
-            for(var index = 0; index < len; index++){
+            var index, messages = messageWrapper.messages,
+                len = messages.length;
+            for(index = 0; index < len; index++){
                 console.log('PollingTransport: received '+JSON.stringify(messages[index]));
                 transport.trigger(messages[index].message_type, messages[index].details);
             }
@@ -581,7 +586,7 @@ CardGame.PollingTransport = function(){
         jQuery.getJSON("/command/" + command, {details: details.join(",")}, function(data){
             console.log("command result:"+ data.result);
         });
-    }
+    };
 
     transport.createGroup = function(sourceGroupId, targetGroup, cardId, cardPosition, newGroupIdFunction) {
         // how to set player?
@@ -592,14 +597,14 @@ CardGame.PollingTransport = function(){
             "sourceGroupId": sourceGroupId,
             "cardId": cardId,
             "cardPosition": cardPosition
-        }
+        };
         jQuery.post("/command/group", params, function(data, textStatus) {
             console.debug("createGroup received response <%o, %o>", data, textStatus);
             if (newGroupIdFunction) {
                 newGroupIdFunction(data.newGroupId);
             }
         }, "json");
-    }
+    };
 
     return transport;
 };
