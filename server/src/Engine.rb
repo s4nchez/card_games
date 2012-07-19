@@ -15,7 +15,7 @@ module CardGames
 
     def handle_move(player, details)
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 3
-      group_id, x, y = details
+      group_id, x, y = details[0], details[1].to_i, details[2].to_i
       @state.reposition(group_id, x, y)
       @messaging.send(player, {
           :message_type => "group_repositioned",

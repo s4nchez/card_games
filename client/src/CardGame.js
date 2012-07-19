@@ -119,6 +119,8 @@ CardGame.Group = function(groupId, initialX, initialY, config){
         return cards.length;
     };
     group.groupId = groupId;
+    group.getX = function(){return x;};
+    group.getY = function(){return y;};
     group.groupStyle = function(groupStyleName) {
         groupStyle = availableTypes[groupStyleName];
         group.trigger("StyleChanged");
@@ -193,6 +195,11 @@ CardGame.Game = function(transport){
         findGroup(details.group_id).moveTo(details.x, details.y);
         game.trigger("GroupRepositioned:"+details.group_id);
     });
+
+    game.groupMovedByWidget = function(groupId, newX, newY) {
+        transport.sendCommand("reposition_group", [groupId, newX, newY]);
+        findGroup(groupId).moveTo(newX, newY);
+    }
 
     game.selectGroup = function(groupId){
         if(selectedGroup){
@@ -353,6 +360,8 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
         },
         redrawInternals = function(){
             var i = 0, uiCards = groupUI.getCards();
+            groupComponent.setX(groupUI.getX());
+            groupComponent.setY(groupUI.getY());
             border.setWidth(groupUI.getWidth());
             border.setHeight(groupUI.getHeight());
             mirror.clear();
@@ -473,7 +482,7 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
         groupComponent.on("dragstart", hideCardComponents);
         groupComponent.on("dragend", function(){
             var pos = border.getAbsolutePosition();
-            groupUI.moveTo(pos.x, pos.y);
+            ui.groupMovedByWidget(group.groupId, pos.x, pos.y);
             redrawInternals();
         });
     })();
@@ -554,6 +563,7 @@ CardGame.PollingTransport = function(){
             var len = messages.length;
             for(var index = 0; index < len; index++){
                 console.log('PollingTransport: received '+JSON.stringify(messages[index]));
+                transport.trigger(messages[index].message_type, messages[index].details);
             }
         };
 
@@ -566,6 +576,12 @@ CardGame.PollingTransport = function(){
     setInterval(function(){
         jQuery.getJSON("/query", handleNextMessages);
     },1000);
+
+    transport.sendCommand = function(command, details) {
+        jQuery.getJSON("/command/" + command, {details: details.join(",")}, function(data){
+            console.log("command result:"+ data.result);
+        });
+    }
 
     transport.createGroup = function(sourceGroupId, targetGroup, cardId, cardPosition, newGroupIdFunction) {
         // how to set player?
