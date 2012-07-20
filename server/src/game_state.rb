@@ -8,38 +8,42 @@ module CardGames
                     initial_position = [10,10])
       @logger = Logger.new(STDOUT)
       @players = []
-      @group_seq = 1
+      @group_seq = 0
       @groups = {}
-      create_group(nil, initial_cards, initial_position)
+      new_group("stack", initial_position)
+      @groups["g1"][:cards].concat initial_cards
     end
 
-    def create_group(source_group_id, card_ids, position, style = "stack")
-      x, y = position
+    def new_group(style, position)
+      @group_seq += 1
+      new_group_id = "g#@group_seq"
+      @logger.info { "group_id = #{new_group_id}" }
+      x,y = position
+      group = {
+          :group_id => new_group_id,
+          :cards => [],
+          :style => style,
+          :x => x,
+          :y => y
+      }
+      @groups[new_group_id] = group
+      group
+    end
 
-      # need to remove from source_group_id
-      if source_group_id
-        source_group = @groups[source_group_id]
-        if source_group
-          source_group[:cards].delete_if {|card_id| card_ids.include? card_id }
-          if source_group[:cards].empty?
-            @groups.delete(source_group_id)
-          end
-        end
+    def create_group(source_group_id, card_id, position, style = "stack")
+      raise "source group not found" if !@groups.has_key? source_group_id
+      source_group = @groups[source_group_id]
+      raise "card was not found in source group" if !source_group[:cards].include? card_id
+
+      source_group[:cards].delete card_id
+
+      if source_group[:cards].empty?
+        @groups.delete(source_group_id)
       end
 
-      new_group_id = "g#{@group_seq}"
-      @group_seq += 1
-      @logger.info { "new_group_id = #{new_group_id}" }
-
-      new_group = {
-        :group_id => new_group_id,
-        :cards => card_ids,
-        :style => style,
-        :x => x,
-        :y => y
-      }
-      @groups[new_group_id] = new_group
-      return new_group_id
+      new_group = new_group(style, position)
+      new_group[:cards] << card_id
+      new_group[:group_id]
     end
 
     def reposition(group_id, x, y)

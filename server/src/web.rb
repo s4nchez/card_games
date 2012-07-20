@@ -38,7 +38,7 @@ post '/command/group' do
   card_id = params[:cardId].to_i
   position = params[:cardPosition].map {|n| n.to_i}
 
-  new_group_id = engine.create_group(source_group_id, card_id, position)
+  new_group_id = engine.create_group(player_session, source_group_id, card_id, position)
   JSON({:newGroupId => new_group_id})
 end
 

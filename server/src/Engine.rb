@@ -38,8 +38,12 @@ module CardGames
       })
     end
 
-    def create_group(source_group, card_id, position)
-      return @state.create_group(source_group, [card_id], position)
+    def create_group(player, source_group, card_id, position)
+      begin
+        @state.create_group(source_group, card_id, position)
+      rescue RuntimeError => error
+        invalid_command(player, error.message)
+      end
     end
 
     def invalid_command(player, error)

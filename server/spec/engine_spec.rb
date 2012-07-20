@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__)+"/../spec/")  # required by rake
+$LOAD_PATH.unshift(File.dirname(__FILE__)+"/../spec/") # required by rake
 
 require 'spec_helper'
 
@@ -36,4 +36,19 @@ describe 'Engine' do
     @engine.process_command("p1", "reposition_group")
   end
 
+  it "should create new group" do
+    @state.expects(:create_group).returns("new_id")
+    @engine.create_group("p1", "src", 1, [1, 2]).should == "new_id"
+  end
+
+  it "should send invalid command if failed to create group" do
+    @state.expects(:create_group).raises("some error")
+    @messaging.expects(:send).with("p1", {
+        :message_type => "invalid_command",
+        :details => {
+            :error => "some error"
+        }
+    })
+    @engine.create_group("p1", "src", 1, [1, 2])
+  end
 end
