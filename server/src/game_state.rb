@@ -73,7 +73,7 @@ module CardGames
     end
 
     def player_active(player_session)
-      @players << player_session
+      @players << player_session unless @players.include? player_session
     end
   end
 end
