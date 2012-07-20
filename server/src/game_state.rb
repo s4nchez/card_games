@@ -4,29 +4,16 @@ module CardGames
   class GameState
     attr_reader :groups, :players
 
-    def initialize
+    def initialize(initial_cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                    initial_position = [10,10])
       @logger = Logger.new(STDOUT)
       @players = []
-      @groups = {
-          "g1" => {
-              :group_id => "g1",
-              :cards => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-              :style => "stack",
-              :x => 10,
-              :y => 10
-          },
-          "g2" => {
-              :group_id => "g2",
-              :cards => [11, 12, 13, 14, 15],
-              :style => "side_by_side_horizontal",
-              :x => 140,
-              :y => 140
-          }
-      }
-      @group_seq = 3
+      @group_seq = 1
+      @groups = {}
+      create_group(nil, initial_cards, initial_position)
     end
 
-    def create_group(source_group_id, card_ids, position)
+    def create_group(source_group_id, card_ids, position, style = "stack")
       x, y = position
 
       # need to remove from source_group_id
@@ -47,7 +34,7 @@ module CardGames
       new_group = {
         :group_id => new_group_id,
         :cards => card_ids,
-        :style => "stack",
+        :style => style,
         :x => x,
         :y => y
       }
