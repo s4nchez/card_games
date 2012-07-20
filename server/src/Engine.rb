@@ -6,14 +6,10 @@ module CardGames
     end
 
     def process_command(player, command, *details)
-      if command == "reposition_group"
-        handle_move(player, details)
-        return
-      end
-      @messaging.send(player, command)
+      self.send(command, player, details)
     end
 
-    def handle_move(player, details)
+    def reposition_group(player, details)
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 3
       group_id, x, y = details[0], details[1].to_i, details[2].to_i
       @state.reposition(group_id, x, y)
@@ -24,6 +20,20 @@ module CardGames
               :group_id => group_id,
               :x => x,
               :y => y
+          }
+      })
+    end
+
+    def restyle_group(player, details)
+      return invalid_command(player, "missing arguments (received #{details})") if details.length != 2
+      group_id, style_name = details
+      @state.restyle(group_id, style_name)
+
+      @messaging.send_multiple(@state.players, {
+          :message_type => "group_restyled",
+          :details => {
+              :group_id => group_id,
+              :style_name => style_name
           }
       })
     end

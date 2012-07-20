@@ -29,6 +29,7 @@
 --
 TODO
 
+* reloading the page on the client effectively adds you as a new player (you receive multiple messages)
 
 ---
 API

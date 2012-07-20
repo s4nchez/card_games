@@ -56,11 +56,19 @@ module CardGames
     end
 
     def reposition(group_id, x, y)
-      @logger.info { "group_id = #{group_id}" }
+      @logger.info { "#{__method__}: group_id = #{group_id}" }
       group = @groups[group_id]
       if group
-          group[:x] = x
-          group[:y] = y
+        group[:x] = x
+        group[:y] = y
+      end
+    end
+
+    def restyle(group_id, style_name)
+      @logger.info { "#{__method__}: group_id = #{group_id}" }
+      group = @groups[group_id]
+      if group
+        group[:style] = style_name
       end
     end
 

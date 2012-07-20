@@ -198,6 +198,10 @@ CardGame.Game = function(transport){
         game.trigger("GroupRepositioned:" + details.group_id);
     });
 
+    transport.on("group_restyled", function(details){
+        findGroup(details.group_id).groupStyle(details.style_name);
+    });
+
     game.groupMovedByWidget = function(groupId, newX, newY) {
         transport.sendCommand("reposition_group", [groupId, newX, newY]);
         findGroup(groupId).moveTo(newX, newY);
@@ -250,6 +254,8 @@ CardGame.Game = function(transport){
     };
 
     game.changeStyleOfSelectGroup = function(styleName){
+        console.log("restyle_group");
+        transport.sendCommand("restyle_group", [selectedGroup.groupId, styleName]);
         selectedGroup.groupStyle(styleName);
     };
 
@@ -563,14 +569,14 @@ CardGame.CardWidget = function(stage, ui, options){
 
 CardGame.PollingTransport = function(){
     var transport = {},
-        handleNextMessages = function(messageWrapper){
-            var index, messages = messageWrapper.messages,
-                len = messages.length;
-            for(index = 0; index < len; index++){
-                console.log('PollingTransport: received '+JSON.stringify(messages[index]));
-                transport.trigger(messages[index].message_type, messages[index].details);
-            }
-        };
+    handleNextMessages = function(messageWrapper){
+        var index, messages = messageWrapper.messages,
+            len = messages.length;
+        for(index = 0; index < len; index++){
+            console.log('PollingTransport: received '+JSON.stringify(messages[index]));
+            transport.trigger(messages[index].message_type, messages[index].details);
+        }
+    };
 
     _.extend(transport, Backbone.Events);
 
