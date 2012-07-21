@@ -249,8 +249,8 @@ CardGame.Game = function(transport){
     };
 
     game.receiveCard = function(draggedCard, droppedOnGroupId) {
-        var group = findGroup(droppedOnGroupId);
-        var cardIdx = group.addCard(draggedCard.cardId);
+        var group = findGroup(droppedOnGroupId),
+            cardIdx = group.addCard(draggedCard.cardId);
         game.trigger("CardAddedToGroup", group.groupId, draggedCard.cardId);
         game.selectGroup(droppedOnGroupId);
 
@@ -259,8 +259,8 @@ CardGame.Game = function(transport){
     };
 
     game.cardReceivedCard = function(draggedCard, droppedOnCardId){
-        var group = findGroupContainingCard(droppedOnCardId);
-        var cardIdx = group.addCard(draggedCard.cardId, droppedOnCardId);
+        var group = findGroupContainingCard(droppedOnCardId),
+            cardIdx = group.addCard(draggedCard.cardId, droppedOnCardId);
         game.trigger("CardAddedToGroup", group.groupId, draggedCard.cardId);
         game.selectGroup(group.groupId);
 

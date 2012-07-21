@@ -37,17 +37,17 @@ describe("Group Component", function () {
     it("should add cards before existing cards", function(){
         group.addCard(1);
         group.addCard(2);
-        expect(group.getCards()[0].cardId).toEqual(2);
-        expect(group.getCards()[1].cardId).toEqual(1);
-    })
+        expect(group.getCards()[0].cardId).toEqual(1);
+        expect(group.getCards()[1].cardId).toEqual(2);
+    });
 
     it("should add cards after existing card", function(){
         group.addCard(2);
         group.addCard(1);
-        group.addCard(3,1);
-        expect(group.getCards()[0].cardId).toEqual(1);
+        group.addCard(3,2);
+        expect(group.getCards()[0].cardId).toEqual(2);
         expect(group.getCards()[1].cardId).toEqual(3);
-        expect(group.getCards()[2].cardId).toEqual(2);
+        expect(group.getCards()[2].cardId).toEqual(1);
     })
 
 });

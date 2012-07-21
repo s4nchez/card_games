@@ -1,7 +1,8 @@
 describe("Game UI", function () {
 
     var transport = {
-        createGroup: jasmine.createSpy()
+        createGroup: jasmine.createSpy(),
+        moveCard: jasmine.createSpy()
     };
 
     beforeEach(function(){
