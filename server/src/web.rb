@@ -42,6 +42,18 @@ post '/command/group' do
   JSON({:newGroupId => new_group_id})
 end
 
+post '/command/movecard' do
+  logger.info { "/command/movecard received #{params}" }
+
+  source_group_id = params[:sourceGroupId]
+  target_group_id = params[:targetGroupId]
+  target_idx = params[:targetIdx].to_i
+  card_id = params[:cardId].to_i
+
+  engine.move_card(player_session, source_group_id, target_group_id, target_idx, card_id)
+  JSON({:result => 'ok'})
+end
+
 get '/query' do
   JSON(messaging.query(player_session))
 end

@@ -58,7 +58,7 @@ describe("Game UI", function () {
         var game = CardGame.Game(transport);
         transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving({cardId:2});
-        game.receiveCard(2, "group_0");
+        game.receiveCard({cardId:2, moveStartGroupId:"group_0"}, "group_0");
         expect(group0.addCard).toHaveBeenCalledWith(2);
     });
 
@@ -69,7 +69,7 @@ describe("Game UI", function () {
         transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
         game.startMoving({cardId:3});
         group0.addCard = jasmine.createSpy();
-        game.cardReceivedCard(3, 1);
+        game.cardReceivedCard({cardId:3, moveStartGroupId:"group_0"}, 1);
         expect(group0.addCard).toHaveBeenCalledWith(3, 1);
     });
 

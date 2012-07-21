@@ -106,11 +106,14 @@ CardGame.Group = function(groupId, initialX, initialY, config){
         y = newY;
     };
     group.addCard = function(cardId, insertAfterCardId){
-        var idx = 0;
+        // the uppermost card is at the end!  this is the default placement position (if we change this here,
+        // we need to make sure the initialization code is consistent still)
+        var idx = cards.length;
         if(insertAfterCardId){
             idx = cards.indexOf(insertAfterCardId) + 1;
         }
         cards.splice(idx, 0, cardId);
+        return idx;
     };
     group.removeCard = function(card){
         var index = cards.indexOf(card);
@@ -245,18 +248,24 @@ CardGame.Game = function(transport){
         });
     };
 
-    game.receiveCard = function(draggedId, droppedOnId) {
-        var group = findGroup(droppedOnId);
-        group.addCard(draggedId);
-        game.trigger("CardAddedToGroup", group.groupId, draggedId);
-        game.selectGroup(droppedOnId);
+    game.receiveCard = function(draggedCard, droppedOnGroupId) {
+        var group = findGroup(droppedOnGroupId);
+        var cardIdx = group.addCard(draggedCard.cardId);
+        game.trigger("CardAddedToGroup", group.groupId, draggedCard.cardId);
+        game.selectGroup(droppedOnGroupId);
+
+        // TODO function to call back if something went wrong?
+        transport.moveCard(draggedCard.moveStartGroupId, droppedOnGroupId, cardIdx, draggedCard.cardId);
     };
 
-    game.cardReceivedCard = function(draggedCardId, droppedOnCardId){
+    game.cardReceivedCard = function(draggedCard, droppedOnCardId){
         var group = findGroupContainingCard(droppedOnCardId);
-        group.addCard(draggedCardId, droppedOnCardId);
-        game.trigger("CardAddedToGroup", group.groupId, draggedCardId);
+        var cardIdx = group.addCard(draggedCard.cardId, droppedOnCardId);
+        game.trigger("CardAddedToGroup", group.groupId, draggedCard.cardId);
         game.selectGroup(group.groupId);
+
+        // TODO function to call back if something went wrong?
+        transport.moveCard(draggedCard.moveStartGroupId, group.groupId, cardIdx, draggedCard.cardId);
     };
 
     game.changeStyleOfSelectGroup = function(styleName){
@@ -463,7 +472,7 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
 
     group.onCollisionAccepted = function(model){
         if(model.cardId){
-            ui.receiveCard(model.cardId, group.groupId);
+            ui.receiveCard(model, group.groupId);
         }
     };
 
@@ -544,7 +553,11 @@ CardGame.CardWidget = function(stage, ui, options){
     };
 
     card.getModel = function(){
-        return { cardId: cardId };
+        var model = { cardId: cardId };
+        if (card.moveStartGroupId) {
+            model.moveStartGroupId = card.moveStartGroupId;
+        }
+        return model;
     };
 
     card.getPoints = function () {
@@ -563,7 +576,7 @@ CardGame.CardWidget = function(stage, ui, options){
     };
 
     card.onCollisionAccepted = function(model){
-        ui.cardReceivedCard(model.cardId, cardId);
+        ui.cardReceivedCard(model, cardId);
     };
 
     card.onNoCollisionFound = function(){
@@ -619,6 +632,22 @@ CardGame.PollingTransport = function(){
             if (newGroupIdFunction) {
                 newGroupIdFunction(data.newGroupId);
             }
+        }, "json");
+    };
+
+    transport.moveCard = function(sourceGroupId, targetGroupId, targetIdx, cardId) {
+        // how to set player?
+        console.debug("transport.moveCard(%s, %s, %s, %o)", sourceGroupId, targetGroupId, targetIdx, cardId);
+
+        var params = {
+            "sourceGroupId": sourceGroupId,
+            "targetGroupId": targetGroupId,
+            "targetIdx": targetIdx,
+            "cardId": cardId
+        };
+        // TODO think about doing a PUT on a card instead?
+        jQuery.post("/command/movecard", params, function(data, textStatus) {
+            console.debug("moveCard received response <%o, %o>", data, textStatus);
         }, "json");
     };
 

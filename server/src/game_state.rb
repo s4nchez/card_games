@@ -46,6 +46,23 @@ module CardGames
       new_group[:group_id]
     end
 
+    def move_card(source_group_id, target_group_id, target_idx, card_id)
+       raise "source group not found" if !@groups.has_key? source_group_id
+       source_group = @groups[source_group_id]
+       raise "card was not found in source group" if !source_group[:cards].include? card_id
+       target_group = @groups[target_group_id]
+       raise "target group not found" if !target_group
+
+       source_group[:cards].delete card_id
+
+       if source_group[:cards].empty?
+         @groups.delete(source_group_id)
+       end
+
+       target_idx = [target_idx, target_group[:cards].length].min
+       target_group[:cards].insert(target_idx, card_id)
+     end
+
     def reposition(group_id, x, y)
       @logger.info { "#{__method__}: group_id = #{group_id}" }
       group = @groups[group_id]

@@ -46,6 +46,14 @@ module CardGames
       end
     end
 
+    def move_card(player, source_group_id, target_group_id, target_idx, card_id)
+      begin
+        @state.move_card(source_group_id, target_group_id, target_idx, card_id)
+      rescue RuntimeError => error
+        invalid_command(player, error.message)
+      end
+    end
+
     def invalid_command(player, error)
       @messaging.send(player, {
           :message_type => "invalid_command",
