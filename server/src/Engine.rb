@@ -55,6 +55,17 @@ module CardGames
     def move_card(player, source_group_id, target_group_id, target_idx, card_id)
       begin
         @state.move_card(source_group_id, target_group_id, target_idx, card_id)
+        others = @state.players.select { |p| p != player }
+        @messaging.send_multiple(others, {
+            :message_type => "card_moved",
+            :details => {
+                :source_group_id => source_group_id,
+                :target_group_id => target_group_id,
+                :target_idx => target_idx,
+                :card_id => card_id
+            }
+        })
+
       rescue RuntimeError => error
         invalid_command(player, error.message)
       end

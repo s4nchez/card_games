@@ -214,6 +214,17 @@ CardGame.Game = function(transport){
         game.trigger("CardAddedToGroup", newGroup.groupId, cardId);
     });
 
+    transport.on("card_moved", function(details){
+        console.log("handling card_moved");
+        var sourceGroupId = details.source_group_id,
+            targetGroupId = details.target_group_id,
+            targetIndex = details.target_idx,
+            cardId = details.card_id,
+            card = { cardId:cardId };
+        game.startMoving(card);
+        game.receiveCard(card, targetGroupId);
+    });
+
     game.groupMovedByWidget = function(groupId, newX, newY) {
         transport.sendCommand("reposition_group", [groupId, newX, newY]);
         findGroup(groupId).moveTo(newX, newY);
