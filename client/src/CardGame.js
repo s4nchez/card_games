@@ -311,6 +311,10 @@ CardGame.Stage = function(ui, options){
             components.splice(ix, 1);
             layer.remove(gameComponent.getComponent());
             layer.draw();
+        },
+        redrawGroupAndReorderComponents = function(groupId){
+            groups[groupId].redraw();
+            components.sort(byZIndex);
         };
 
     stage.draw = function(){
@@ -370,15 +374,15 @@ CardGame.Stage = function(ui, options){
         cards[cardId] = CardGame.CardWidget(stage, ui, {
             cardId:cardId
         });
-        groups[groupId].redraw();
+        redrawGroupAndReorderComponents(groupId);
     });
 
     ui.on("CardRemovedFromGroup", function(groupId, cardId){
-        groups[groupId].redraw();
+        redrawGroupAndReorderComponents(groupId);
     });
 
     ui.on("CardAddedToGroup", function(groupId, cardId){
-        groups[groupId].redraw();
+        redrawGroupAndReorderComponents(groupId);
     });
 
     stage.getCardWidget = function(cardId){
