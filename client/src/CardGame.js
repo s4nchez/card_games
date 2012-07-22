@@ -205,6 +205,15 @@ CardGame.Game = function(transport){
         findGroup(details.group_id).groupStyle(details.style_name);
     });
 
+    transport.on("group_created", function(details){
+        var newGroup, cardId = details.cards[0],
+            card = { cardId:cardId };
+        game.startMoving(card);
+        newGroup = addGroup(details.x, details.y, details.group_id);
+        newGroup.addCard(cardId);
+        game.trigger("CardAddedToGroup", newGroup.groupId, cardId);
+    });
+
     game.groupMovedByWidget = function(groupId, newX, newY) {
         transport.sendCommand("reposition_group", [groupId, newX, newY]);
         findGroup(groupId).moveTo(newX, newY);
@@ -224,6 +233,7 @@ CardGame.Game = function(transport){
         group.removeCard(card.cardId);
         card.moveStartGroupId = group.groupId;
         if (group.size() === 0) {
+            console.log('GroupRemoved '+group.groupId);
             game.trigger("GroupRemoved", group.groupId);
         }else{
             game.trigger("CardRemovedFromGroup", group.groupId, card.cardId);
@@ -597,6 +607,9 @@ CardGame.PollingTransport = function(){
             len = messages.length;
         for(index = 0; index < len; index++){
             console.log('PollingTransport: received '+JSON.stringify(messages[index]));
+            if(messages[index].message_type === "invalid_command"){
+                console.error("Received error message: "+JSON.stringify(messages[index].details));
+            }
             transport.trigger(messages[index].message_type, messages[index].details);
         }
     };
@@ -608,7 +621,12 @@ CardGame.PollingTransport = function(){
     });
 
     setInterval(function(){
-        jQuery.getJSON("/query", handleNextMessages);
+        try{
+            jQuery.getJSON("/query", handleNextMessages);
+        }catch(error){
+            console.warn("keeping poller alive after error");
+        }
+
     },1000);
 
     transport.sendCommand = function(command, details) {

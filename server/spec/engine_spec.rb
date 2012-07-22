@@ -14,8 +14,8 @@ describe 'Engine' do
 
   it "should handle moving groups" do
     @state.expects(:reposition).with("g1", 5, 10)
-    @state.expects(:players).returns(%(p1 p2))
-    @messaging.expects(:send_multiple).with(%(p1 p2), {
+    @state.expects(:players).returns(%w(p1 p2))
+    @messaging.expects(:send_multiple).with(%w(p1 p2), {
         :message_type => "group_repositioned",
         :details => {
             :group_id => "g1",
@@ -36,8 +36,11 @@ describe 'Engine' do
     @engine.process_command("p1", "reposition_group")
   end
 
-  it "should create new group" do
+  it "should create new group and notify other players" do
+    @state.expects(:players).returns(%w(p1 p2))
     @state.expects(:create_group).returns("new_id")
+    @state.expects(:groups).returns({})
+    @messaging.expects(:send_multiple).with(%w(p2), {:message_type=> 'group_created', :details => nil})
     @engine.create_group("p1", "src", 1, [1, 2]).should == "new_id"
   end
 

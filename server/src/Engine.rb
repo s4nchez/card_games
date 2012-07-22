@@ -40,7 +40,13 @@ module CardGames
 
     def create_group(player, source_group, card_id, position)
       begin
-        @state.create_group(source_group, card_id, position)
+        new_group_id = @state.create_group(source_group, card_id, position)
+        others = @state.players.select { |p| p != player }
+        @messaging.send_multiple(others, {
+            :message_type => "group_created",
+            :details => @state.groups[new_group_id]
+        })
+        new_group_id
       rescue RuntimeError => error
         invalid_command(player, error.message)
       end
