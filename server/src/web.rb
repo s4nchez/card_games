@@ -35,7 +35,7 @@ post '/command/group' do
   logger.info { "/command/group received #{params}" }
 
   source_group_id = params[:sourceGroupId]
-  card_id = params[:cardId].to_i
+  card_id = params[:cardId]
   position = params[:cardPosition].map {|n| n.to_i}
 
   new_group_id = engine.create_group(player_session, source_group_id, card_id, position)
@@ -48,7 +48,7 @@ post '/command/movecard' do
   source_group_id = params[:sourceGroupId]
   target_group_id = params[:targetGroupId]
   target_idx = params[:targetIdx].to_i
-  card_id = params[:cardId].to_i
+  card_id = params[:cardId]
 
   engine.move_card(player_session, source_group_id, target_group_id, target_idx, card_id)
   JSON({:result => 'ok'})

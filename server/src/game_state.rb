@@ -4,7 +4,7 @@ module CardGames
   class GameState
     attr_reader :groups, :players
 
-    def initialize(initial_cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    def initialize(initial_cards = ["AS", "AC", "AD", "AH", "KS", "KC", "KD", "KH", "QS", "QC", "QD", "QH", "JS", "JC", "JD", "JH"],
                     initial_position = [10,10])
       @logger = Logger.new(STDOUT)
       @players = []
