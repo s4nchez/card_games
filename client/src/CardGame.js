@@ -106,12 +106,13 @@ CardGame.Group = function(groupId, initialX, initialY, config){
         y = newY;
     };
     group.addCard = function(cardId, insertAfterCardId){
-        // the uppermost card is at the end!  this is the default placement position (if we change this here,
-        // we need to make sure the initialization code is consistent still)
-        var idx = cards.length;
+        var idx = 0;
         if(insertAfterCardId){
             idx = cards.indexOf(insertAfterCardId) + 1;
         }
+        return group.addCardOnPosition(cardId, idx);
+    };
+    group.addCardOnPosition = function(cardId, idx){
         cards.splice(idx, 0, cardId);
         return idx;
     };
@@ -189,7 +190,7 @@ CardGame.Game = function(transport){
             group = addGroup(groupDetails.x, groupDetails.y, groupDetails.group_id);
             group.groupStyle(groupDetails.style);
 
-            for(j = 0; j < groupDetails.cards.length; j++){
+            for(j = groupDetails.cards.length -1; j >= 0; j--){
                 group.addCard(groupDetails.cards[j]);
                 game.trigger("CardCreatedAndAddedToGroup", group.groupId, groupDetails.cards[j]);
             }
@@ -220,9 +221,11 @@ CardGame.Game = function(transport){
             targetGroupId = details.target_group_id,
             targetIndex = details.target_idx,
             cardId = details.card_id,
-            card = { cardId:cardId };
+            card = { cardId:cardId },
+            group = findGroup(targetGroupId);
         game.startMoving(card);
-        game.receiveCard(card, targetGroupId);
+        group.addCardOnPosition(cardId, targetIndex);
+        game.trigger("CardAddedToGroup", group.groupId, cardId);
     });
 
     game.groupMovedByWidget = function(groupId, newX, newY) {
