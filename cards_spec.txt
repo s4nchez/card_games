@@ -29,33 +29,42 @@
 --
 TODO
 
----
-API
 
-Current state
-  * sent by client on load
+--
+New API (v 1.1):
 
-  only player who sent the command receives a representation of the game
+Assumptions:
+* target group defines the state of the moved card
+* every change to a group the server sends a new id
+* commands with the wrong group id are refused
 
-Transfer card between groups
-  * sent by client when card is dropped
+create group  -> (source group id, source card idx, new position)
+          all <- (actor, source group old id, source group new id, target group new id, card image*)
 
-  parameters:
-  - player
-  - source group
-  - target group (optional - creates new group)
-  - target index
-  - card id
-  - card position (if new group?)
+move card  -> (source group id, source card idx, target group id, target card idx)
+      all <- (actor, source group old id, source group new id, source card idx, target group old id, target group new id, target group card idx**, card image*)
 
-  validations:
-  - fails if card id is in source group
-  - fails if target group doesn't exist
-  - handles index > number of of cards on target group
+reposition group -> (source group id, new position)
+            all  <- (actor, source group old id, source group new id, new position)
 
-  all players receive a representation of the command
+restyle group -> (source group id, new style)
+         all  <- (actor, source group old id, source group new id, new style)
 
-Group style change
-Reposition group
-Shuffle group
+shuffle group -> (group id)
+         all  <- (actor, source group old id, source group new id, [card image, ...]*)
 
+set ownership  -> (source group id, owner***)
+          all <- (actor, source group old id, source group new id, owner, [card image, ...]*)
+
+* if (target) group has owner, only visible to him. The rest will receive a generic "back of the card" image.
+** if target group has owner, only visible to him.
+*** a player, no one or everyone.
+
+Examples:
+* hidden deck = create group, no owner
+* dealing card = create group (source deck) + set owner to player + move more cards
+* discard (visible) = create group (from player owned group) + set owner to public
+* discard (hidden) = create group (from player owned group) + set owner to no one
+
+Open questions:
+* do stacks have special properties i.e. can only push and pop from the top
