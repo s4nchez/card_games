@@ -38,34 +38,27 @@ module CardGames
       })
     end
 
-    def create_group(player, source_group, card_id, position)
+    def create_group(player, source_group_id, card_idx, position)
       begin
-        new_group_id = @state.create_group(source_group, card_id, position)
-        others = @state.players.select { |p| p != player }
-        @messaging.send_multiple(others, {
+        result = @state.create_group(source_group_id, card_idx, position)
+        @messaging.send_multiple @state.players, {
             :message_type => "group_created",
-            :details => @state.groups[new_group_id]
-        })
-        new_group_id
+            :actor => player,
+            :details => result
+        }
       rescue RuntimeError => error
         invalid_command(player, error.message)
       end
     end
 
-    def move_card(player, source_group_id, target_group_id, target_idx, card_id)
+    def move_card(player, source_group_id, source_group_card_idx, target_group_id, target_group_card_idx)
       begin
-        @state.move_card(source_group_id, target_group_id, target_idx, card_id)
-        others = @state.players.select { |p| p != player }
-        @messaging.send_multiple(others, {
+        result = @state.move_card(source_group_id, source_group_card_idx, target_group_id, target_group_card_idx)
+        @messaging.send_multiple @state.players, {
             :message_type => "card_moved",
-            :details => {
-                :source_group_id => source_group_id,
-                :target_group_id => target_group_id,
-                :target_idx => target_idx,
-                :card_id => card_id
-            }
-        })
-
+            :actor => player,
+            :details => result
+        }
       rescue RuntimeError => error
         invalid_command(player, error.message)
       end

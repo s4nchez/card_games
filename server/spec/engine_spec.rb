@@ -38,10 +38,9 @@ describe 'Engine' do
 
   it "should create new group and notify other players" do
     @state.expects(:players).returns(%w(p1 p2))
-    @state.expects(:create_group).returns("new_id")
-    @state.expects(:groups).returns({})
-    @messaging.expects(:send_multiple).with(%w(p2), {:message_type=> 'group_created', :details => nil})
-    @engine.create_group("p1", "src", 1, [1, 2]).should == "new_id"
+    @state.expects(:create_group).returns(:result)
+    @messaging.expects(:send_multiple).with(%w(p1 p2), {:message_type=> 'group_created', :actor => "p1", :details => :result})
+    @engine.create_group("p1", "src", 1, [1, 2])
   end
 
   it "should send invalid command if failed to create group" do

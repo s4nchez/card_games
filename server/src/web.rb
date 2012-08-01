@@ -34,23 +34,23 @@ end
 post '/command/group' do
   logger.info { "/command/group received #{params}" }
 
-  source_group_id = params[:sourceGroupId]
-  card_id = params[:cardId]
-  position = params[:cardPosition].map {|n| n.to_i}
+  source_group_id = params[:source_group_id]
+  card_idx = params[:card_idx].to_i
+  position = params[:position].map {|n| n.to_i}
 
-  new_group_id = engine.create_group(player_session, source_group_id, card_id, position)
+  new_group_id = engine.create_group(player_session, source_group_id, card_idx, position)
   JSON({:newGroupId => new_group_id})
 end
 
 post '/command/movecard' do
   logger.info { "/command/movecard received #{params}" }
 
-  source_group_id = params[:sourceGroupId]
-  target_group_id = params[:targetGroupId]
-  target_idx = params[:targetIdx].to_i
-  card_id = params[:cardId]
+  source_group_id = params[:source_group_id]
+  target_group_id = params[:target_group_id]
+  source_group_card_idx = params[:source_group_card_idx].to_i
+  target_group_card_idx = params[:target_group_card_idx].to_i
 
-  engine.move_card(player_session, source_group_id, target_group_id, target_idx, card_id)
+  engine.move_card(player_session, source_group_id, source_group_card_idx, target_group_id, target_group_card_idx)
   JSON({:result => 'ok'})
 end
 
@@ -59,8 +59,16 @@ get '/query' do
 end
 
 get '/current-state' do
-  state.player_active(player_session);
-  current_state = state.groups.values
+  state.player_active(player_session)
+  current_state = []
+  state.groups.map do |group_id, group|
+    group[:group_id] = group_id
+    current_state <<  group
+  end
+  result = {
+      :player => player_session,
+      :current_state => current_state
+  }
   logger.info { "#{current_state}" }
-  JSON(current_state)
+  JSON(result)
 end
