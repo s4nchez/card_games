@@ -323,7 +323,56 @@ CardGame.Game = function(transport){
         selectedGroup.groupStyle(styleName);
     };
 
+    game.init = function(){
+        transport.init();
+    };
+
     return game;
+};
+
+CardGame.Assets = function(){
+    var assets = {}, imageObj,
+        cards = ["AS", "AC", "AD", "AH", "KS", "KC", "KD", "KH", "QS", "QC", "QD", "QH", "JS", "JC", "JD", "JH"],
+        imageDimensions = {width: 72, height: 96},
+        calculateCardSprites = function(){
+            var i, result = {};
+            for(i =0; i < cards.length; i++){
+                result[cards[i]] = {
+                    x: i * imageDimensions.width,
+                    y: 0,
+                    width: imageDimensions.width,
+                    height: imageDimensions.height
+                };
+            }
+            return result;
+        }, spriteSpecs;
+
+    assets.load = function(callback){
+        spriteSpecs = calculateCardSprites();
+        imageObj = new Image();
+        imageObj.onload = function(){
+            callback();
+        };
+        imageObj.src = "images/classic-cards/all.png";
+    };
+    assets.getCardSprite = function(cardId, draggable){
+        if(!draggable){
+            draggable = false;
+        }
+        var sprite = new Kinetic.Sprite({
+            x:0,
+            y:0,
+            image:imageObj,
+            animation:'idle',
+            animations:{ idle: [spriteSpecs[cardId]] },
+            frameRate:1,
+            draggable:draggable
+        });
+        sprite.getWidth = function(){return imageDimensions.width;};
+        sprite.getHeight = function(){return imageDimensions.height;};
+        return sprite;
+    };
+    return assets;
 };
 
 CardGame.Stage = function(ui, options){
@@ -347,7 +396,8 @@ CardGame.Stage = function(ui, options){
             }
             group.redraw();
             components.sort(byZIndex);
-        };
+        },
+        assets = CardGame.Assets();
 
     stage.draw = function(){
         layer.draw();
@@ -366,8 +416,6 @@ CardGame.Stage = function(ui, options){
     stage.notifyCurrentCollision = function(gameComponent){
         collisionDetection.notifyCurrentCollision(gameComponent);
     };
-
-    internalStage.add(layer);
 
     ui.on("GroupCreated", function(group, x, y){
         groups[group.getGroupId()] = CardGame.GroupWidget(stage, ui, group, {
@@ -415,6 +463,14 @@ CardGame.Stage = function(ui, options){
     stage.getCardWidget = function(cardId){
         return cards[cardId];
     };
+
+    stage.getCardSprite = assets.getCardSprite;
+
+    internalStage.add(layer);
+
+    assets.load(function(){
+        ui.init();
+    });
 
     return stage;
 };
@@ -471,24 +527,12 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
             var mirror = {}, cardImages = [];
 
             mirror.addCard = function (card, x, y) {
-                var image = new Kinetic.Image({
-                    x:x,
-                    y:y,
-                    alpha: 0.5,
-                    width:72,
-                    height:96
-                });
-
-                (function () {
-                    var imageObj = new Image();
-                    imageObj.onload = function () {
-                        image.setImage(imageObj);
-                        cardImages.push(image);
+                var image = stage.getCardSprite(card);
+                image.setX(x);
+                image.setY(y);
+                cardImages.push(image);
                         groupComponent.add(image);
                         stage.draw();
-                    };
-                    imageObj.src = "images/classic-cards/" + card + ".png";
-                }());
             };
 
             mirror.clear = function(){
@@ -573,22 +617,9 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
 CardGame.CardWidget = function(stage, ui, options){
     var cardId = options.cardId,
         card = {},
-        imageObj = new Image(),
-        image = new Kinetic.Image({
-            x: options.x,
-            y: options.y,
-            width: 72,
-            height: 96,
-            draggable: true
-        });
+        image = stage.getCardSprite(options.cardId, true);
+
     card.cardId = cardId;
-
-    imageObj.onload = function() {
-        image.setImage(imageObj);
-        stage.draw();
-    };
-
-    imageObj.src = "images/classic-cards/"+cardId+".png";
 
     image.on("dragstart", function(){
         ui.startMoving(card);
@@ -633,6 +664,7 @@ CardGame.CardWidget = function(stage, ui, options){
     CardGame.CollisionableWidget(stage, card);
 
     stage.add(card);
+    image.start();
 
     return card;
 };
@@ -654,10 +686,12 @@ CardGame.PollingTransport = function(){
 
     _.extend(transport, Backbone.Events);
 
-    jQuery.getJSON("/current-state", function(data){
-        player = data.player;
-        transport.trigger("InitialState", data.current_state);
-    });
+    transport.init = function(){
+        jQuery.getJSON("/current-state", function(data){
+            player = data.player;
+            transport.trigger("InitialState", data.current_state);
+        });
+    };
 
     setInterval(function(){
         try{
