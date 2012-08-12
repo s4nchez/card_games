@@ -259,11 +259,13 @@ CardGame.Game = function(transport){
         if(sourceGroup) {
             sourceGroup.updateId(details.source_group_new_id);
             game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
+            game.trigger("GroupUnlocked", details.source_group_new_id);
         }
 
         if(details.source_group_old_id !== details.target_group_old_id){
             targetGroup.updateId(details.target_group_new_id);
             game.trigger("GroupIdChanged", details.target_group_old_id, details.target_group_new_id);
+            game.trigger("GroupUnlocked", details.target_group_new_id);
         }
     });
 
@@ -291,8 +293,8 @@ CardGame.Game = function(transport){
             removeGroup(group);
             game.trigger("GroupRemoved", group.getGroupId());
         }else{
-            game.trigger("GroupLocked", group.getGroupId());
             game.trigger("CardRemovedFromGroup", group.getGroupId(), card.cardId);
+            game.trigger("GroupLocked", group.getGroupId());
         }
     };
 
@@ -303,7 +305,6 @@ CardGame.Game = function(transport){
         newGroup.addCard(cardId);
 
         game.trigger("CardAddedToGroup", newGroup.getGroupId(), cardId);
-
         game.trigger("GroupLocked", newGroup.getGroupId());
 
         transport.createGroup(card.moveStartGroupId, card.moveStartCardIdx, [x, y]);
@@ -313,6 +314,7 @@ CardGame.Game = function(transport){
         var group = findGroup(droppedOnGroupId),
             cardIdx = group.addCard(draggedCard.cardId);
         game.trigger("CardAddedToGroup", group.getGroupId(), draggedCard.cardId);
+        game.trigger("GroupLocked", group.getGroupId());
         game.selectGroup(droppedOnGroupId);
 
         // TODO function to call back if something went wrong?
@@ -323,6 +325,7 @@ CardGame.Game = function(transport){
         var group = findGroupContainingCard(droppedOnCardId),
             cardIdx = group.addCard(draggedCard.cardId, droppedOnCardId);
         game.trigger("CardAddedToGroup", group.getGroupId(), draggedCard.cardId);
+        game.trigger("GroupLocked", group.getGroupId());
         game.selectGroup(group.getGroupId());
 
         // TODO function to call back if something went wrong?
