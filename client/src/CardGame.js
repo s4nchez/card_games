@@ -159,9 +159,6 @@ CardGame.Game = function(transport){
                     return true;
                 }
             });
-            if (!foundGroup) {
-                console.error("Group not found: " + groupId);
-            }
             return foundGroup;
         },
         findGroupContainingCard = function (cardId) {
@@ -194,6 +191,10 @@ CardGame.Game = function(transport){
             game.trigger("GroupCreated", group, x, y);
             game.selectGroup(groupId);
             return group;
+        },
+        removeGroup = function(group) {
+            var ix = groups.indexOf(group);
+            groups.splice(ix, 1);
         };
 
     _.extend(game, Backbone.Events);
@@ -227,14 +228,19 @@ CardGame.Game = function(transport){
             targetGroupInitialId = targetGroup.getGroupId();
             targetGroup.updateId(details.target_group_new_id);
             game.trigger("GroupIdChanged", targetGroupInitialId, details.target_group_new_id);
+            game.trigger("GroupUnlocked", targetGroup.getGroupId());
         }else{
             game.startMoving(card);
             targetGroup = addGroup(details.x, details.y, details.target_group_new_id);
             targetGroup.addCard(cardId);
             game.trigger("CardAddedToGroup", targetGroup.getGroupId(), cardId);
         }
-        sourceGroup.updateId(details.source_group_new_id);
-        game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
+
+        if (sourceGroup) {
+            sourceGroup.updateId(details.source_group_new_id);
+            game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
+            game.trigger("GroupUnlocked", details.source_group_new_id);
+        }
     });
 
     transport.on("card_moved", function(details, isActor){
@@ -250,8 +256,10 @@ CardGame.Game = function(transport){
             game.trigger("CardAddedToGroup", targetGroup.getGroupId(), cardId);
         }
 
-        sourceGroup.updateId(details.source_group_new_id);
-        game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
+        if(sourceGroup) {
+            sourceGroup.updateId(details.source_group_new_id);
+            game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
+        }
 
         if(details.source_group_old_id !== details.target_group_old_id){
             targetGroup.updateId(details.target_group_new_id);
@@ -280,8 +288,10 @@ CardGame.Game = function(transport){
         group.removeCard(card.cardId);
         if (group.size() === 0) {
             console.log('GroupRemoved '+group.getGroupId());
+            removeGroup(group);
             game.trigger("GroupRemoved", group.getGroupId());
         }else{
+            game.trigger("GroupLocked", group.getGroupId());
             game.trigger("CardRemovedFromGroup", group.getGroupId(), card.cardId);
         }
     };
@@ -293,6 +303,8 @@ CardGame.Game = function(transport){
         newGroup.addCard(cardId);
 
         game.trigger("CardAddedToGroup", newGroup.getGroupId(), cardId);
+
+        game.trigger("GroupLocked", newGroup.getGroupId());
 
         transport.createGroup(card.moveStartGroupId, card.moveStartCardIdx, [x, y]);
     };
@@ -460,6 +472,16 @@ CardGame.Stage = function(ui, options){
         redrawGroupAndReorderComponents(groupId);
     });
 
+    ui.on("GroupLocked", function(groupId) {
+        console.log("GroupLocked: %s", groupId);
+        groups[groupId].lock();
+    });
+
+    ui.on("GroupUnlocked", function(groupId) {
+        console.log("GroupUnlocked: %s", groupId);
+        groups[groupId].unlock();
+    });
+
     stage.getCardWidget = function(cardId){
         return cards[cardId];
     };
@@ -508,15 +530,14 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
             });
         },
         redrawInternals = function(){
-            var uiCards = groupUI.getCards();
             groupComponent.setX(groupUI.getX());
             groupComponent.setY(groupUI.getY());
             border.setWidth(groupUI.getWidth());
             border.setHeight(groupUI.getHeight());
             mirror.clear();
-            uiCards.forEach(function(cardPosition){
+            applyToCards(function(cardPosition, cardWidget) {
+                var cardComponent = cardWidget.getComponent();
                 mirror.addCard(cardPosition.cardId, cardPosition.relativeX, cardPosition.relativeY);
-                var cardComponent = stage.getCardWidget(cardPosition.cardId).getComponent();
                 cardComponent.setAlpha(1);
                 cardComponent.setX(cardPosition.x);
                 cardComponent.setY(cardPosition.y);
@@ -544,12 +565,32 @@ CardGame.GroupWidget = function(stage, ui, groupUI, options) {
 
             return mirror;
         },
-        mirror = cardsMirroring(groupComponent);
+        mirror = cardsMirroring(groupComponent),
+        applyToCards = function(callback) {
+            var uiCards = groupUI.getCards();
+            uiCards.forEach(function(card) {
+                callback(card, stage.getCardWidget(card.cardId));
+            });
+        };
 
     groupComponent.add(border);
 
     group.getComponent = function(){
         return groupComponent;
+    };
+
+    group.lock = function() {
+        groupComponent.setDraggable(false);
+        applyToCards(function(card, widget){
+            widget.lock();
+        });
+    };
+
+    group.unlock = function() {
+        groupComponent.setDraggable(true);
+        applyToCards(function(card, widget){
+            widget.unlock();
+        });
     };
 
     group.onCollisionStart = function(model){
@@ -645,6 +686,14 @@ CardGame.CardWidget = function(stage, ui, options){
             right:image.getX() + image.getWidth(),
             bottom:image.getY() + image.getHeight()
         };
+    };
+
+    card.lock = function() {
+        image.setDraggable(false);
+    };
+
+    card.unlock = function() {
+        image.setDraggable(true);
     };
 
     card.onCollisionStart = function () {

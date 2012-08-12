@@ -41,6 +41,22 @@ describe("Game UI", function () {
         expect(stageListener).toHaveBeenCalledWith(group1, 20, 20);
     });
 
+    it("should lock source and target groups when card is dropped out", function(){
+        var group0 = CardGame.Group("group_0", 10, 10, {});
+        var group1 = CardGame.Group("group_1", 20, 20, {});
+        var card = {cardId:2, moveStartGroupId:"group_0"};
+        spyOn(CardGame, "Group").andReturn(group0);
+        var game = CardGame.Game(transport),
+            stageListener = jasmine.createSpy();
+        game.on("GroupLocked", stageListener);
+        transport.trigger("InitialState", [{ cards: [1, 2, 3], group_id: "group_0", style: "stack", x: 10, y: 10 }]);
+        game.startMoving(card);
+        CardGame.Group.andReturn(group1);
+        game.droppedOut(card, 20, 20);
+        expect(stageListener).toHaveBeenCalledWith("group_0");
+        expect(stageListener).toHaveBeenCalledWith("group_1");
+    });
+
     it("should remove group if becomes empty", function(){
         var game = CardGame.Game(transport),
             stageListener = jasmine.createSpy(),
