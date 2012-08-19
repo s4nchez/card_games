@@ -12,14 +12,39 @@ describe 'GameState' do
   end
 
   it "should allow repositioning group" do
-    @state.reposition("g1", 10, 15)
-    @state.groups["g1"][:x].should == 10
-    @state.groups["g1"][:y].should == 15
+    result = @state.reposition("g1", 10, 15)
+    @state.groups["g1"].should be_nil
+    @state.groups["g2"][:x].should == 10
+    @state.groups["g2"][:y].should == 15
+    result.should == {
+      :group_old_id => "g1",
+      :group_new_id => "g2",
+      :x => 10,
+      :y => 15
+    }
+  end
+
+  it "should throw exception if trying to reposition non existent group" do
+    lambda {
+      @state.reposition("g2", 10, 15)
+    }.should raise_error("group not found: g2")
   end
 
   it "should allow restyling group" do
-    @state.restyle("g1", "side_by_side_vertical")
-    @state.groups["g1"][:style].should == "side_by_side_vertical"
+    result = @state.restyle("g1", "side_by_side_vertical")
+    @state.groups["g1"].should be_nil
+    @state.groups["g2"][:style].should == "side_by_side_vertical"
+    result.should == {
+      :group_old_id => "g1",
+      :group_new_id => "g2",
+      :style_name => "side_by_side_vertical",
+    }
+  end
+
+  it "should throw exception if trying to restyle non existent group" do
+    lambda {
+      @state.restyle("g2", "side_by_side_vertical")
+    }.should raise_error("group not found: g2")
   end
 
   describe "creating new group" do

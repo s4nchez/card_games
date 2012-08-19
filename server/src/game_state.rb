@@ -83,20 +83,31 @@ module CardGames
      end
 
     def reposition(group_id, x, y)
-      raise "group not found" if !@groups.has_key? group_id
+      raise "group not found: #{group_id}" if !@groups.has_key? group_id
       group = @groups[group_id]
-      if group
-        group[:x] = x
-        group[:y] = y
-      end
+      group[:x] = x
+      group[:y] = y
+      group_new_id = update_group group, group_id
+
+      {
+        :group_old_id => group_id,
+        :group_new_id => group_new_id,
+        :x => x,
+        :y => y
+      }
     end
 
     def restyle(group_id, style_name)
-      @logger.info { "#{__method__}: group_id = #{group_id}" }
+      raise "group not found: #{group_id}" if !@groups.has_key? group_id
       group = @groups[group_id]
-      if group
-        group[:style] = style_name
-      end
+      group[:style] = style_name
+      group_new_id = update_group group, group_id
+
+      {
+        :group_old_id => group_id,
+        :group_new_id => group_new_id,
+        :style_name => style_name
+      }
     end
 
     def player_active(player_session)

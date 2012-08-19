@@ -214,13 +214,22 @@ var CardGame = {};
             });
         });
 
-        transport.on("group_repositioned", function (details) {
-            findGroup(details.group_id).moveTo(details.x, details.y);
-            game.trigger("GroupRepositioned:" + details.group_id);
+        transport.on("group_repositioned", function (details, isActor) {
+            var group = findGroup(details.group_old_id);
+            group.moveTo(details.x, details.y);
+            group.updateId(details.group_new_id);
+            game.trigger("GroupRepositioned:" + details.group_old_id);
+            game.trigger("GroupIdChanged", details.group_old_id, details.group_new_id);
+            if (isActor) {
+                game.trigger("GroupUnlocked", details.group_new_id);
+            }
         });
 
         transport.on("group_restyled", function (details) {
-            findGroup(details.group_id).groupStyle(details.style_name);
+            var group = findGroup(details.group_old_id);
+            group.groupStyle(details.style_name);
+            group.updateId(details.group_new_id);
+            game.trigger("GroupIdChanged", details.group_old_id, details.group_new_id);
         });
 
         transport.on("group_created", function (details, isActor) {
@@ -276,6 +285,7 @@ var CardGame = {};
         game.groupMovedByWidget = function (groupId, newX, newY) {
             transport.sendCommand("reposition_group", [groupId, newX, newY]);
             findGroup(groupId).moveTo(newX, newY);
+            game.trigger("GroupLocked", groupId);
         };
 
         game.selectGroup = function (groupId) {

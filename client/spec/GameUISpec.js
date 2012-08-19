@@ -1,11 +1,12 @@
 describe("Game UI", function () {
 
-    var transport = {
-        createGroup: jasmine.createSpy(),
-        moveCard: jasmine.createSpy()
-    };
+    var transport;
 
     beforeEach(function(){
+        transport = {
+            createGroup: jasmine.createSpy(),
+            moveCard: jasmine.createSpy()
+        }
         _.extend(transport, Backbone.Events);
     });
 
@@ -98,7 +99,7 @@ describe("Game UI", function () {
            spyOn(CardGame, "Group").andReturn(group);
            game.on("GroupRepositioned:g1", listener);
            transport.trigger("InitialState", [{ cards: [1,2,3], group_id: "g1", style: "stack", x:10, y: 10}]);
-           transport.trigger("group_repositioned", {group_id: "g1", x: 15, y: 30});
+           transport.trigger("group_repositioned", {group_new_id: "g2", group_old_id: "g1", x: 15, y: 30});
            expect(listener).toHaveBeenCalledWith();
        })
     });

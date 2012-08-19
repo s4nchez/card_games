@@ -12,30 +12,33 @@ module CardGames
     def reposition_group(player, details)
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 3
       group_id, x, y = details[0], details[1].to_i, details[2].to_i
-      @state.reposition(group_id, x, y)
+      begin
+        result = @state.reposition(group_id, x, y)
 
-      @messaging.send_multiple(@state.players, {
-          :message_type => "group_repositioned",
-          :details => {
-              :group_id => group_id,
-              :x => x,
-              :y => y
-          }
-      })
+        @messaging.send_multiple(@state.players, {
+            :message_type => "group_repositioned",
+            :actor => player,
+            :details => result
+        })
+      rescue RuntimeError => error
+        invalid_command(player, error.message)
+      end
     end
 
     def restyle_group(player, details)
       return invalid_command(player, "missing arguments (received #{details})") if details.length != 2
-      group_id, style_name = details
-      @state.restyle(group_id, style_name)
+      begin
+        group_id, style_name = details
+        result = @state.restyle(group_id, style_name)
 
-      @messaging.send_multiple(@state.players, {
-          :message_type => "group_restyled",
-          :details => {
-              :group_id => group_id,
-              :style_name => style_name
-          }
-      })
+        @messaging.send_multiple(@state.players, {
+            :message_type => "group_restyled",
+            :actor => player,
+            :details => result
+        })
+      rescue RuntimeError => error
+        invalid_command(player, error.message)
+      end
     end
 
     def create_group(player, source_group_id, card_idx, position)
