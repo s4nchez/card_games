@@ -60,15 +60,7 @@ end
 
 get '/current-state' do
   state.player_active(player_session)
-  current_state = []
-  state.groups.map do |group_id, group|
-    group[:group_id] = group_id
-    current_state <<  group
-  end
-  result = {
-      :player => player_session,
-      :current_state => current_state
-  }
-  logger.info { "#{current_state}" }
+  result = state.current_state(player_session)
+  logger.info { "#{result}" }
   JSON(result)
 end

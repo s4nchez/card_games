@@ -8,7 +8,7 @@ describe 'GameState' do
 
   before do
     SecureRandom.stubs(:hex).returns(*%w(g1 g2 g3 g4 g5 g6 g7 g8 g9 g10))
-    @state = CardGames::GameState.new(%w(AC 2H 3D 4S 5D), [0, 0])
+    @state = CardGames::GameState.new(%w(AC 2H 3D 4S 5D), [0, 0], :back, { :type => :all })
   end
 
   it "should allow repositioning group" do
@@ -50,7 +50,7 @@ describe 'GameState' do
   describe "creating new group" do
     it "should move card to newly created group and update source group id" do
       result = @state.create_group("g1", 3, [50, 51])
-      result.should == {
+      result[:others].should == {
           :source_group_old_id => "g1",
           :source_group_new_id => "g3",
           :target_group_new_id => "g2",
@@ -61,6 +61,40 @@ describe 'GameState' do
       @state.groups["g1"].should be_nil
       @state.groups["g2"][:cards].should == %w(4S)
       @state.groups["g3"][:cards].should == %w(AC 2H 3D 5D)
+    end
+
+    it "should maintain the player owner for a new group" do
+      @state.groups["g1"][:ownership] = { :type => :single_player, :player => :someone }
+      result = @state.create_group("g1", 3, [50, 51])
+      result[:others].should == {
+          :source_group_old_id => "g1",
+          :source_group_new_id => "g3",
+          :target_group_new_id => "g2",
+          :card => :back,
+          :x => 50,
+          :y => 51
+      }
+      result[:someone].should == {
+          :source_group_old_id => "g1",
+          :source_group_new_id => "g3",
+          :target_group_new_id => "g2",
+          :card => "4S",
+          :x => 50,
+          :y => 51
+      }
+    end
+
+    it "should maintain no owner for a new group" do
+      @state.groups["g1"][:ownership] = { :type => :none }
+      result = @state.create_group("g1", 3, [50, 51])
+      result[:others].should == {
+          :source_group_old_id => "g1",
+          :source_group_new_id => "g3",
+          :target_group_new_id => "g2",
+          :card => :back,
+          :x => 50,
+          :y => 51
+      }
     end
 
     it "should remove source group if becomes empty" do
@@ -195,8 +229,42 @@ describe 'GameState' do
         @state.move_card("g1", 0, "g2", 2)
       }.should raise_error("invalid target card index: 2")
     end
-
-
   end
 
+  describe "current state" do
+    it "returns the initial group" do
+      @state.current_state(:someone).should == {
+        :player => :someone,
+        :current_state =>
+         [@state.groups["g1"]]
+       }
+    end
+
+    it "returns a player owned group for that player" do
+      @state.groups["g1"][:ownership] = { :type => :single_player, :player => :someone }
+      @state.current_state(:someone).should == {
+        :player => :someone,
+        :current_state =>
+         [@state.groups["g1"]]
+       }
+    end
+
+    it "returns a player owned group for anyone else" do
+      @state.groups["g1"][:ownership] = { :type => :single_player, :player => :someone }
+      @state.current_state(:someone_else).should == {
+        :player => :someone_else,
+        :current_state =>
+         [@state.groups["g1"].merge(:cards => [:back] * 5)]
+       }
+    end
+
+    it "returns a unowned (hidden) group" do
+      @state.groups["g1"][:ownership] = { :type => :none }
+      @state.current_state(:someone).should == {
+        :player => :someone,
+        :current_state =>
+         [@state.groups["g1"].merge(:cards => [:back] * 5)]
+       }
+    end
+  end
 end

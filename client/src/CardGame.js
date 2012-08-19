@@ -361,7 +361,13 @@ var CardGame = {};
 
     CardGame.Assets = function () {
         var assets = {}, imageObj,
-            cards = ["AS", "AC", "AD", "AH", "KS", "KC", "KD", "KH", "QS", "QC", "QD", "QH", "JS", "JC", "JD", "JH"],
+            cards = [
+                "AS", "AC", "AD", "AH",
+                "KS", "KC", "KD", "KH",
+                "QS", "QC", "QD", "QH",
+                "JS", "JC", "JD", "JH",
+                "back"
+            ],
             imageDimensions = {width: 72, height: 96},
             calculateCardSprites = function () {
                 var i, result = {};
