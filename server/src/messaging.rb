@@ -1,27 +1,29 @@
 module CardGames
   class Messaging
     def initialize
-      @messages = {}
+      @clients = {}
     end
 
-    def messages_for(target)
-      @messages[target] = [] unless @messages.has_key? target
-      @messages[target]
+    def register_client(target, send_to_target_fn)
+      @clients[target] = send_to_target_fn
+    end
+
+    def client_for(target)
+      @clients[target]
     end
 
     def send(target, message)
-      messages_for(target) << message
+      client_fn = client_for(target)
+      if client_fn
+        client_fn.call({
+          :target => target,
+          :messages => [message] 
+        })
+      end
     end
 
     def send_multiple(targets, message)
       targets.each { |target| send(target, message) }
-    end
-
-    def query(target)
-      messages = messages_for(target).clone
-      messages_for(target).clear
-      { :target => target,
-        :messages => messages }
     end
   end
 end

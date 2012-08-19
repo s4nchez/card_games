@@ -2,6 +2,7 @@ source :rubygems
 gem "sinatra", "1.3.2"
 gem "sinatra-contrib", "1.3.1"
 gem 'json', '1.7.3'
+gem 'thin', '1.4.1'
 
 group :test do
   gem "rspec", "2.7.0"

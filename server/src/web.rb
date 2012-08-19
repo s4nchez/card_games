@@ -64,3 +64,17 @@ get '/current-state' do
   logger.info { "#{result}" }
   JSON(result)
 end
+
+# required for keep_open
+set :server, :thin
+
+get '/message-stream', provides: 'text/event-stream' do
+ stream :keep_open do |out|
+    messaging.register_client(player_session, lambda { |messages|
+      out << "event: messages\n"  
+      out << "data: " + JSON(messages) + "\n\n"
+      logger.info("Sent message to " + player_session)
+    })
+    out.callback { messaging.unregister_client(player_session) }
+  end
+end

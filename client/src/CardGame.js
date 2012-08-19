@@ -1,4 +1,4 @@
-/*global window, _, jQuery, console, Backbone, Kinetic*/
+/*global window, _, jQuery, console, Backbone, Kinetic, EventSource*/
 var CardGame = {};
 
 (function () {
@@ -741,18 +741,32 @@ var CardGame = {};
         return card;
     };
 
-    CardGame.PollingTransport = function () {
+    CardGame.SseTransport = function () {
         var transport = {},
             player,
             handleNextMessages = function (messageWrapper) {
                 var messages = messageWrapper.messages;
                 messages.forEach(function (message) {
-                    console.log('PollingTransport: received ' + JSON.stringify(message));
+                    console.log('SseTransport: received ' + JSON.stringify(message));
                     if (message.message_type === "invalid_command") {
                         console.error("Received error message: " + JSON.stringify(message.details));
                     }
                     console.log("Is actor? %s", message.actor === player);
                     transport.trigger(message.message_type, message.details, message.actor === player);
+                });
+            },
+            startMessageStreamEventSource = function () {
+                var messageStreamEventSource = new EventSource('/message-stream');
+                messageStreamEventSource.addEventListener('messages', function (e) {
+                    handleNextMessages(JSON.parse(e.data));
+                });
+                messageStreamEventSource.addEventListener('open', function (e) {
+                    console.log('/message-stream connection opened');
+                });
+                messageStreamEventSource.addEventListener('error', function (e) {
+                    if (e.readyState === EventSource.CLOSED) {
+                        console.log('/message-stream connection closed');
+                    }
                 });
             };
 
@@ -763,16 +777,8 @@ var CardGame = {};
                 player = data.player;
                 transport.trigger("InitialState", data.current_state);
             });
+            startMessageStreamEventSource();
         };
-
-        window.setInterval(function () {
-            try {
-                jQuery.getJSON("/query", handleNextMessages);
-            } catch (error) {
-                console.warn("keeping poller alive after error");
-            }
-
-        }, 1000);
 
         transport.sendCommand = function (command, details) {
             jQuery.getJSON("/command/" + command, {details: details.join(",")}, function (data) {
