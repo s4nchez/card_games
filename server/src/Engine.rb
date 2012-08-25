@@ -44,8 +44,8 @@ module CardGames
     def create_group(player, source_group_id, card_idx, position)
       begin
         result = @state.create_group(source_group_id, card_idx, position)
-        @state.players.each do |player|
-          @messaging.send(player, {
+        @state.players.each do |target_player|
+          @messaging.send(target_player, {
             :message_type => "group_created",
             :actor => player,
             :details => result[:others]

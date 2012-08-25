@@ -72,7 +72,7 @@ var CardGame = CardGame || {};
             var group = findGroup(details.group_old_id);
             group.moveTo(details.x, details.y);
             group.updateId(details.group_new_id);
-            game.trigger("GroupRepositioned:" + details.group_old_id);
+            game.trigger("GroupRepositioned", details.group_old_id);
             game.trigger("GroupIdChanged", details.group_old_id, details.group_new_id);
             if (isActor) {
                 game.trigger("GroupUnlocked", details.group_new_id);
@@ -106,7 +106,9 @@ var CardGame = CardGame || {};
             if (sourceGroup) {
                 sourceGroup.updateId(details.source_group_new_id);
                 game.trigger("GroupIdChanged", details.source_group_old_id, details.source_group_new_id);
-                game.trigger("GroupUnlocked", details.source_group_new_id);
+                if(isActor){
+                    game.trigger("GroupUnlocked", details.source_group_new_id);
+                }
             }
         });
 

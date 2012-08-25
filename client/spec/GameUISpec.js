@@ -97,10 +97,10 @@ describe("Game UI", function () {
                group = CardGame.Group("g1", 10, 10, {}),
                listener = jasmine.createSpy();
            spyOn(CardGame, "Group").andReturn(group);
-           game.on("GroupRepositioned:g1", listener);
+           game.on("GroupRepositioned", listener);
            transport.trigger("InitialState", [{ cards: [1,2,3], group_id: "g1", style: "stack", x:10, y: 10}]);
            transport.trigger("group_repositioned", {group_new_id: "g2", group_old_id: "g1", x: 15, y: 30});
-           expect(listener).toHaveBeenCalledWith();
+           expect(listener).toHaveBeenCalledWith("g1");
        })
     });
 });

@@ -150,6 +150,10 @@ var CardGame = CardGame || {};
             groups[groupId].unlock();
         });
 
+        ui.on("GroupRepositioned", function (groupId) {
+            groups[groupId].redraw();
+        });
+
         stage.getCardWidget = function (cardId) {
             return cards[cardId];
         };
@@ -287,7 +291,6 @@ var CardGame = CardGame || {};
         });
 
         groupUI.on("StyleChanged", redrawInternals);
-        ui.on("GroupRepositioned:" + group.groupId, redrawInternals);
 
         groupComponent.on("click", function () {
             ui.selectGroup(groupUI.getGroupId());
