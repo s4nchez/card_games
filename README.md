@@ -6,7 +6,7 @@ A multiplayer "generic" card game.
 
 In order to keep the game as generic as possible and yet playable, the following concepts are applied:
 
-### Cards are always treated as a group
+### Cards are always treated as groups
 
 This can be used to represent a deck, multiple decks, a hand, a shared pile, and even a single discard (group with single card). So far we haven't seen any advantage of differentiating a single card from a group.
 
