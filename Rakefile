@@ -16,4 +16,12 @@ end
 
 task :runall => %w(rspec jasmine:ci)
 
+task :travis do
+  ["rake rspec", "rake jasmine:ci"].each do |cmd|
+    puts "Starting to run #{cmd}..."
+    system("export DISPLAY=:99.0 && #{cmd}")
+    raise "#{cmd} failed!" unless $?.exitstatus == 0
+  end
+end
+
 task :default  => :runall
